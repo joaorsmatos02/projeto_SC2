@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -73,32 +74,35 @@ public class UserCatalog {
 		users.createNewFile();
 		Scanner sc = new Scanner(users);
 
-		// le user e pass da socket
+		// le user e envia nonce
 		String user = in.readUTF();
-		String password = (String) in.readUTF();
+		SecureRandom rd = new SecureRandom();
+		out.writeLong(rd.nextLong());
+
+		// SECCAO 4.2 do projeto
 
 		// verifica se user existe e pass esta correta
-		boolean newUser = true;
-		String line;
-		while (sc.hasNextLine()) {
-			line = sc.nextLine();
-			if (line.startsWith(user) && line.endsWith(password)) { // se for a pass certa
-				newUser = false;
-				break;
-			} else if (line.startsWith(user)) { // se for a pass errada
-				sc.close();
-				throw new WrongCredentialsException("Credenciais incorretas.");
-			}
-		}
-		sc.close();
-
-		// se o user nao existir faz o seu registo
-		if (newUser) {
-			this.addUser(user);
-			FileWriter fw = new FileWriter("txtFiles//userCreds.txt", true);
-			fw.write(user + ":" + password + "\n");
-			fw.close();
-		}
+//		boolean newUser = true;
+//		String line;
+//		while (sc.hasNextLine()) {
+//			line = sc.nextLine();
+//			if (line.startsWith(user) && line.endsWith(password)) { // se for a pass certa
+//				newUser = false;
+//				break;
+//			} else if (line.startsWith(user)) { // se for a pass errada
+//				sc.close();
+//				throw new WrongCredentialsException("Credenciais incorretas.");
+//			}
+//		}
+//		sc.close();
+//
+//		// se o user nao existir faz o seu registo
+//		if (newUser) {
+//			this.addUser(user);
+//			FileWriter fw = new FileWriter("txtFiles//userCreds.txt", true);
+//			fw.write(user + ":" + password + "\n");
+//			fw.close();
+//		}
 
 		return user;
 	}

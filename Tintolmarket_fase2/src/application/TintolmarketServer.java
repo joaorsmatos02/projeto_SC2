@@ -6,8 +6,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.security.KeyStore;
+
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
 
 import catalogs.UserCatalog;
 import entities.User;
@@ -23,22 +26,40 @@ public class TintolmarketServer {
 
 	public static void main(String[] args) {
 
-		ServerSocket serverSocket = null;
+		SSLServerSocket serverSocket = null;
+
+		String filePassword = null;
+		String keyStore = null;
+		String passwordKeystore = null;
 
 		// criar socket
 		try {
-			if (args.length != 0)
-				serverSocket = new ServerSocket(Integer.parseInt(args[0]));
-			else
-				serverSocket = new ServerSocket(12345);
+			if (args.length != 4) {
+				serverSocket = (SSLServerSocket) SSLServerSocketFactory.getDefault()
+						.createServerSocket(Integer.parseInt(args[0]));
+				filePassword = args[1];
+				keyStore = args[2];
+				passwordKeystore = args[3];
+			} else {
+				serverSocket = (SSLServerSocket) SSLServerSocketFactory.getDefault().createServerSocket(12345);
+				filePassword = args[0];
+				keyStore = args[1];
+				passwordKeystore = args[2];
+			}
 		} catch (IOException e1) {
 			System.out.println("Erro na conexao com cliente");
 		}
 
 		try { // handler de cada cliente
+
+			File file = new File(keyStore);
+			FileInputStream is = new FileInputStream(file);
+			KeyStore keyStoreFile = KeyStore.getInstance(KeyStore.getDefaultType());
+			keyStoreFile.load(is, passwordKeystore.toCharArray());
+
 			while (true) {
-				Socket socket = serverSocket.accept();
-				ServerThread st = new ServerThread(socket);
+				SSLSocket socket = (SSLSocket) serverSocket.accept();
+				ServerThread st = new ServerThread(socket, is, filePassword);
 				st.start();
 			}
 		} catch (Exception e) {
@@ -56,19 +77,23 @@ public class TintolmarketServer {
 
 /**
  * 
- * Classe ServerThread que representa uma thread para comunicação com os
+ * Classe ServerThread que representa uma thread para comunicacao com os
  * clientes.
  */
 class ServerThread extends Thread {
 
-	private Socket socket;
+	private SSLSocket socket;
+	private FileInputStream keyStore;
+	private String filePassword;
 
-	public ServerThread(Socket inSoc) {
+	public ServerThread(SSLSocket inSoc, FileInputStream keyStore, String filePassword) {
 		this.socket = inSoc;
+		this.keyStore = keyStore;
+		this.filePassword = filePassword;
 	}
 
 	public void run() {
-		
+
 		System.out.println("Cliente conectado");
 		DataOutputStream out = null;
 		DataInputStream in = null;

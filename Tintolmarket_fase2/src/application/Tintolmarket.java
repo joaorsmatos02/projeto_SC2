@@ -5,8 +5,10 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.net.Socket;
 import java.util.Scanner;
+
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 /**
  *
@@ -17,34 +19,41 @@ import java.util.Scanner;
  */
 public class Tintolmarket {
 
-	private static Socket socket;
+	private static SSLSocket socket;
 	private static String name;
 
 	public static void main(String[] args) {
 
-		if (args.length != 3) {
-			System.out.println("A aplicaÃ§Ã£o deve ser iniciada da forma Tintolmarket <serverAddress> <userID> [password]");
+		if (args.length != 5) {
+			System.out
+					.println("A aplicacao deve ser iniciada da forma Tintolmarket <serverAddress> <userID> [password]");
 			System.exit(0);
 		}
-		
+
 		// retirar ip e port
 		String[] serverInfo = args[0].split(":");
+		String trustStore = args[1];
+		String keyStore = args[2];
+		String passwordKeystore = args[3];
+		String userID = args[4];
 
 		try {
 			// estabelecer ligacao
 			if (serverInfo.length != 1)
-				socket = new Socket(serverInfo[0], Integer.parseInt(serverInfo[1]));
+				socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(serverInfo[0],
+						Integer.parseInt(serverInfo[1]));
 			else
-				socket = new Socket(serverInfo[0], 12345);
+				socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(serverInfo[0], 12345);
+
+			socket.startHandshake(); // Realiza a verificação do certificado do servidor
 
 			// iniciar streams
 			DataInputStream in = new DataInputStream(socket.getInputStream());
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-			// enviar user e password
+			// enviar user
 			name = args[1];
 			out.writeUTF(args[1]);
-			out.writeUTF(args[2]);
 			if (in.readBoolean()) {
 				System.out.println("Autenticacao bem sucedida!");
 				// interagir com o server
@@ -120,8 +129,7 @@ public class Tintolmarket {
 				if (tokens.length != 4) {
 					System.out.println("O comando sell e usado na forma \"sell <wine> <value> <quantity>\"");
 					wait = false;
-				}
-				else {
+				} else {
 					out.writeUTF("s");
 					out.writeUTF(tokens[1]);
 					out.writeUTF(tokens[2]);
@@ -131,8 +139,7 @@ public class Tintolmarket {
 				if (tokens.length != 2) {
 					System.out.println("O comando view e usado na forma \"view <wine>\"");
 					wait = false;
-				}
-				else {
+				} else {
 					out.writeUTF("v");
 					out.writeUTF(tokens[1]);
 					image = true;
@@ -152,26 +159,23 @@ public class Tintolmarket {
 				if (tokens.length != 1) {
 					System.out.println("O comando wallet e usado na forma \"wallet\"");
 					wait = false;
-				}
-				else {
+				} else {
 					out.writeUTF("w");
 				}
 			} else if (tokens[0].equals("c") || tokens[0].equals("classify")) {
 				if (tokens.length != 3) {
 					System.out.println("O comando classify e usado na forma \"classify <wine> <stars>\"");
 					wait = false;
-				}
-				else {
+				} else {
 					out.writeUTF("c");
 					out.writeUTF(tokens[1]);
 					out.writeUTF(tokens[2]);
 				}
 			} else if (tokens[0].equals("t") || tokens[0].equals("talk")) {
-				if (tokens.length < 3) { 
+				if (tokens.length < 3) {
 					System.out.println("O comando talk e usado na forma \"talk <user> <message>\"");
 					wait = false;
-				}
-				else {
+				} else {
 					StringBuilder sb = new StringBuilder();
 					for (int i = 2; i < tokens.length; i++) {
 						sb.append(tokens[i] + " ");
@@ -184,8 +188,7 @@ public class Tintolmarket {
 				if (tokens.length != 1) {
 					System.out.println("O comando read e usado na forma \"read \"");
 					wait = false;
-				}
-				else {
+				} else {
 					out.writeUTF("r");
 				}
 			} else if (tokens[0].equals("exit")) {
