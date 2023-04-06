@@ -34,17 +34,20 @@ public class TintolmarketServer {
 
 		// criar socket
 		try {
-			if (args.length != 4) {
+			if (args.length == 4) {
 				serverSocket = (SSLServerSocket) SSLServerSocketFactory.getDefault()
 						.createServerSocket(Integer.parseInt(args[0]));
 				filePassword = args[1];
 				keyStore = args[2];
 				passwordKeystore = args[3];
-			} else {
+			} else if (args.length == 3) {
 				serverSocket = (SSLServerSocket) SSLServerSocketFactory.getDefault().createServerSocket(12345);
 				filePassword = args[0];
 				keyStore = args[1];
 				passwordKeystore = args[2];
+			}
+			else {
+				System.out.println("Argumentos invalidos. O servidor e iniciado na forma TintolmarketServer <port> <password-cifra> <keystore> <password-keystore>.");
 			}
 		} catch (IOException e1) {
 			System.out.println("Erro na conexao com cliente");
@@ -52,6 +55,7 @@ public class TintolmarketServer {
 
 		try { // handler de cada cliente
 
+			//adaptar para ir buscar a keystore correta do servidor
 			File file = new File(keyStore);
 			FileInputStream is = new FileInputStream(file);
 			KeyStore keyStoreFile = KeyStore.getInstance(KeyStore.getDefaultType());

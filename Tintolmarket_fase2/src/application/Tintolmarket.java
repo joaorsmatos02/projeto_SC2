@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.security.KeyStore;
 import java.util.Scanner;
 
 import javax.net.ssl.SSLSocket;
@@ -30,14 +31,16 @@ public class Tintolmarket {
 			System.exit(0);
 		}
 
-		// retirar ip e port
-		String[] serverInfo = args[0].split(":");
-		String trustStore = args[1];
-		String keyStore = args[2];
-		String passwordKeystore = args[3];
-		String userID = args[4];
-
 		try {
+			// retirar ip e port
+			String[] serverInfo = args[0].split(":");
+			FileInputStream truststorefile = new FileInputStream(args[1]); //truststore
+			KeyStore trustStore = KeyStore.getInstance("JCEKS");
+			FileInputStream keystorefile = new FileInputStream(args[2]); //keystore
+			KeyStore keyStore = KeyStore.getInstance("JCEKS");
+			String passwordKeystore = args[3];
+			String userID = args[4];
+
 			// estabelecer ligacao
 			if (serverInfo.length != 1)
 				socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(serverInfo[0],
@@ -45,7 +48,7 @@ public class Tintolmarket {
 			else
 				socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(serverInfo[0], 12345);
 
-			socket.startHandshake(); // Realiza a verificação do certificado do servidor
+			socket.startHandshake(); // Realiza a verificacao do certificado do servidor
 
 			// iniciar streams
 			DataInputStream in = new DataInputStream(socket.getInputStream());
