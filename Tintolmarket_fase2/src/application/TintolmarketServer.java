@@ -56,9 +56,9 @@ public class TintolmarketServer {
 		try { // handler de cada cliente
 
 			//adaptar para ir buscar a keystore correta do servidor
-			File file = new File(keyStore);
+			File file = new File("stores//" + keyStore);
 			FileInputStream is = new FileInputStream(file);
-			KeyStore keyStoreFile = KeyStore.getInstance(KeyStore.getDefaultType());
+			KeyStore keyStoreFile = KeyStore.getInstance("JCEKS");
 			keyStoreFile.load(is, passwordKeystore.toCharArray());
 
 			while (true) {
@@ -67,6 +67,7 @@ public class TintolmarketServer {
 				st.start();
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.out.println(e.getMessage());
 		}
 

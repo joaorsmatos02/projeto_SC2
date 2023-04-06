@@ -27,16 +27,16 @@ public class Tintolmarket {
 
 		if (args.length != 5) {
 			System.out
-					.println("A aplicacao deve ser iniciada da forma Tintolmarket <serverAddress> <userID> [password]");
+					.println("A aplicacao deve ser iniciada da forma Tintolmarket <serverAddress> <truststore> <keystore> <password-keystore> <userID>");
 			System.exit(0);
 		}
 
 		try {
 			// retirar ip e port
 			String[] serverInfo = args[0].split(":");
-			FileInputStream truststorefile = new FileInputStream(args[1]); //truststore
+			FileInputStream truststorefile = new FileInputStream("stores//" + args[1]); //truststore
 			KeyStore trustStore = KeyStore.getInstance("JCEKS");
-			FileInputStream keystorefile = new FileInputStream(args[2]); //keystore
+			FileInputStream keystorefile = new FileInputStream("stores//" + args[2]); //keystore
 			KeyStore keyStore = KeyStore.getInstance("JCEKS");
 			String passwordKeystore = args[3];
 			String userID = args[4];
@@ -49,7 +49,8 @@ public class Tintolmarket {
 				socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(serverInfo[0], 12345);
 
 			socket.startHandshake(); // Realiza a verificacao do certificado do servidor
-
+			//erro ao fazer handshake
+			
 			// iniciar streams
 			DataInputStream in = new DataInputStream(socket.getInputStream());
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
