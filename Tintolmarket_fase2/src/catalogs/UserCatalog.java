@@ -98,12 +98,12 @@ public class UserCatalog {
 		String line;
 		while (sc.hasNextLine()) {
 			line = sc.nextLine();
-			FileInputStream kfile = new FileInputStream(user +"keystore.jks"); //keystore
+			FileInputStream kfile = new FileInputStream("..//stores//" + user + "keystore.jks"); //keystore
 			KeyStore kstore = KeyStore.getInstance("JCEKS");
 			kstore.load(kfile, password_keystore.toCharArray()); //password da keystore
 			Certificate cert = kstore.getCertificate("newcert_" + user); //alias da keypair
 			
-			if (line.startsWith(user)) {
+			if (line.startsWith(user) && cert != null) {
 				newUser = false;
 				break;
 			}
