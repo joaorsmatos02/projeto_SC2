@@ -3,9 +3,15 @@ package catalogs;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -66,9 +72,12 @@ public class UserCatalog {
 	 * @throws IOException               Se ocorrer um erro ao ler ou escrever.
 	 * @throws ClassNotFoundException    Se a classe nao for encontrada.
 	 * @throws WrongCredentialsException Se as credenciais estiverem incorretas.
+	 * @throws KeyStoreException 
+	 * @throws CertificateException 
+	 * @throws NoSuchAlgorithmException 
 	 */
 	public synchronized String login(DataInputStream in, DataOutputStream out)
-			throws ClassNotFoundException, IOException, WrongCredentialsException {
+			throws ClassNotFoundException, IOException, WrongCredentialsException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
 
 		File users = new File("txtFiles//userCreds.txt");
 		users.createNewFile();
@@ -76,33 +85,39 @@ public class UserCatalog {
 
 		// le user e envia nonce
 		String user = in.readUTF();
+		String password_keystore = in.readUTF();
 		SecureRandom rd = new SecureRandom();
 		out.writeLong(rd.nextLong());
+		
 
 		// SECCAO 4.2 do projeto
+		
 
 		// verifica se user existe e pass esta correta
-//		boolean newUser = true;
-//		String line;
-//		while (sc.hasNextLine()) {
-//			line = sc.nextLine();
-//			if (line.startsWith(user) && line.endsWith(password)) { // se for a pass certa
-//				newUser = false;
-//				break;
-//			} else if (line.startsWith(user)) { // se for a pass errada
-//				sc.close();
-//				throw new WrongCredentialsException("Credenciais incorretas.");
-//			}
-//		}
-//		sc.close();
-//
+		boolean newUser = true;
+		String line;
+		while (sc.hasNextLine()) {
+			line = sc.nextLine();
+			FileInputStream kfile = new FileInputStream(user +"keystore.jks"); //keystore
+			KeyStore kstore = KeyStore.getInstance("JCEKS");
+			kstore.load(kfile, password_keystore.toCharArray()); //password da keystore
+			Certificate cert = kstore.getCertificate("newcert_" + user); //alias da keypair
+			
+			if (line.startsWith(user)) {
+				newUser = false;
+				break;
+			}
+//			throw new WrongCredentialsException("Credenciais incorretas.");
+		}
+		sc.close();
+
 //		// se o user nao existir faz o seu registo
-//		if (newUser) {
-//			this.addUser(user);
-//			FileWriter fw = new FileWriter("txtFiles//userCreds.txt", true);
-//			fw.write(user + ":" + password + "\n");
-//			fw.close();
-//		}
+		if (newUser) {
+			this.addUser(user);
+			FileWriter fw = new FileWriter("txtFiles//userCreds.txt", true);
+			fw.write(user + "\n");
+			fw.close();
+		}
 
 		return user;
 	}
