@@ -39,7 +39,7 @@ public class Tintolmarket {
 			FileInputStream keystorefile = new FileInputStream("stores//" + args[2]); //keystore
 			KeyStore keyStore = KeyStore.getInstance("JCEKS");
 			String passwordKeystore = args[3];
-			String userID = args[4];
+			name = args[4];
 
 			// estabelecer ligacao
 			if (serverInfo.length != 1)
@@ -48,16 +48,19 @@ public class Tintolmarket {
 			else
 				socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(serverInfo[0], 12345);
 
+//			SSLContext sslContext = SSLContexts.custom()
+//			        .loadTrustMaterial(new File("client.truststore.jks"), "password".toCharArray())
+//			        .loadKeyMaterial(new File("client.keystore.jks"), "password".toCharArray(), "password".toCharArray())
+//			        .build();
+//
 			socket.startHandshake(); // Realiza a verificacao do certificado do servidor
-			//erro ao fazer handshake
 			
 			// iniciar streams
 			DataInputStream in = new DataInputStream(socket.getInputStream());
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
 			// enviar user
-			name = args[1];
-			out.writeUTF(args[1]);
+			out.writeUTF(name);
 			if (in.readBoolean()) {
 				System.out.println("Autenticacao bem sucedida!");
 				// interagir com o server
