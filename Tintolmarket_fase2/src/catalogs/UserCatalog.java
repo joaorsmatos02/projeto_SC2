@@ -72,12 +72,12 @@ public class UserCatalog {
 	 * @throws IOException               Se ocorrer um erro ao ler ou escrever.
 	 * @throws ClassNotFoundException    Se a classe nao for encontrada.
 	 * @throws WrongCredentialsException Se as credenciais estiverem incorretas.
-	 * @throws KeyStoreException 
-	 * @throws CertificateException 
-	 * @throws NoSuchAlgorithmException 
+	 * @throws KeyStoreException
+	 * @throws CertificateException
+	 * @throws NoSuchAlgorithmException
 	 */
-	public synchronized String login(DataInputStream in, DataOutputStream out)
-			throws ClassNotFoundException, IOException, WrongCredentialsException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
+	public synchronized String login(DataInputStream in, DataOutputStream out) throws ClassNotFoundException,
+			IOException, WrongCredentialsException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
 
 		File users = new File("txtFiles//userCreds.txt");
 		users.createNewFile();
@@ -88,21 +88,19 @@ public class UserCatalog {
 		String password_keystore = in.readUTF();
 		SecureRandom rd = new SecureRandom();
 		out.writeLong(rd.nextLong());
-		
 
-		// SECCAO 4.2 do projeto
-		
+		// TODO SECCAO 4.2 do projeto
 
 		// verifica se user existe e pass esta correta
 		boolean newUser = true;
 		String line;
 		while (sc.hasNextLine()) {
 			line = sc.nextLine();
-			FileInputStream kfile = new FileInputStream("..//stores//" + user + "keystore.jks"); //keystore
+			FileInputStream kfile = new FileInputStream("..//stores//" + user + "keystore.jks"); // keystore
 			KeyStore kstore = KeyStore.getInstance("JCEKS");
-			kstore.load(kfile, password_keystore.toCharArray()); //password da keystore
-			Certificate cert = kstore.getCertificate("newcert_" + user); //alias da keypair
-			
+			kstore.load(kfile, password_keystore.toCharArray()); // password da keystore
+			Certificate cert = kstore.getCertificate("newcert_" + user); // alias da keypair
+
 			if (line.startsWith(user) && cert != null) {
 				newUser = false;
 				break;

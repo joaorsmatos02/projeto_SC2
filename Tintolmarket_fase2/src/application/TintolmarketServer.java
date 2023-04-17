@@ -45,17 +45,21 @@ public class TintolmarketServer {
 				filePassword = args[0];
 				keyStore = args[1];
 				passwordKeystore = args[2];
-			}
-			else {
-				System.out.println("Argumentos invalidos. O servidor e iniciado na forma TintolmarketServer <port> <password-cifra> <keystore> <password-keystore>.");
+			} else {
+				System.out.println(
+						"Argumentos invalidos. O servidor e iniciado na forma TintolmarketServer <port> <password-cifra> <keystore> <password-keystore>.");
 			}
 		} catch (IOException e1) {
 			System.out.println("Erro na conexao com cliente");
 		}
 
+		////////////////////////////////////////////////////////////////////////////////
+		//// TODO/////////////verificar integridade/criar blockchain////////////////////
+		////////////////////////////////////////////////////////////////////////////////
+
 		try { // handler de cada cliente
 
-			//adaptar para ir buscar a keystore correta do servidor
+			// adaptar para ir buscar a keystore correta do servidor
 			File file = new File("stores//" + keyStore);
 			FileInputStream is = new FileInputStream(file);
 			KeyStore keyStoreFile = KeyStore.getInstance("JCEKS");
@@ -90,6 +94,9 @@ class ServerThread extends Thread {
 	private SSLSocket socket;
 	private FileInputStream keyStore;
 	private String filePassword;
+	/////////////////////////////////////////////////////////
+	// TODO Adicionar contador de blocos na blockchain?? ////
+	/////////////////////////////////////////////////////////
 
 	public ServerThread(SSLSocket inSoc, FileInputStream keyStore, String filePassword) {
 		this.socket = inSoc;
@@ -175,6 +182,9 @@ class ServerThread extends Thread {
 					out.writeUTF(String.format("Vinho %s adicionado com sucesso!", arg1));
 					break;
 				case "s":
+					////////////////////////////////////////////////////////////////////////
+					// TODO verificar assinatura do cliente e escrever na blockchain ///////
+					////////////////////////////////////////////////////////////////////////
 					arg1 = in.readUTF();
 					double price = Double.parseDouble(in.readUTF());
 					num = Integer.parseInt(in.readUTF());
@@ -196,6 +206,9 @@ class ServerThread extends Thread {
 					imgStream.close();
 					break;
 				case "b":
+					////////////////////////////////////////////////////////////////////////
+					// TODO verificar assinatura do cliente e escrever na blockchain ///////
+					////////////////////////////////////////////////////////////////////////
 					arg1 = in.readUTF();
 					arg2 = in.readUTF();
 					num = Integer.parseInt(in.readUTF());

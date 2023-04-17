@@ -26,17 +26,17 @@ public class Tintolmarket {
 	public static void main(String[] args) {
 
 		if (args.length != 5) {
-			System.out
-					.println("A aplicacao deve ser iniciada da forma Tintolmarket <serverAddress> <truststore> <keystore> <password-keystore> <userID>");
+			System.out.println(
+					"A aplicacao deve ser iniciada da forma Tintolmarket <serverAddress> <truststore> <keystore> <password-keystore> <userID>");
 			System.exit(0);
 		}
 
 		try {
 			// retirar ip e port
 			String[] serverInfo = args[0].split(":");
-			FileInputStream truststorefile = new FileInputStream("stores//" + args[1]); //truststore
+			FileInputStream truststorefile = new FileInputStream("stores//" + args[1]); // truststore
 			KeyStore trustStore = KeyStore.getInstance("JCEKS");
-			FileInputStream keystorefile = new FileInputStream("stores//" + args[2]); //keystore
+			FileInputStream keystorefile = new FileInputStream("stores//" + args[2]); // keystore
 			KeyStore keyStore = KeyStore.getInstance("JCEKS");
 			String passwordKeystore = args[3];
 			name = args[4];
@@ -54,7 +54,7 @@ public class Tintolmarket {
 //			        .build();
 //
 			socket.startHandshake(); // Realiza a verificacao do certificado do servidor
-			
+
 			// iniciar streams
 			DataInputStream in = new DataInputStream(socket.getInputStream());
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
@@ -136,7 +136,9 @@ public class Tintolmarket {
 				if (tokens.length != 4) {
 					System.out.println("O comando sell e usado na forma \"sell <wine> <value> <quantity>\"");
 					wait = false;
-				} else {
+				} else { //////////////////////////////////////////////////////////////////////
+					// TODO//////////////// enviar informacao assinada (4.3) /////////////////
+					/////////////////////////////////////////////////////////////////////////
 					out.writeUTF("s");
 					out.writeUTF(tokens[1]);
 					out.writeUTF(tokens[2]);
@@ -156,7 +158,9 @@ public class Tintolmarket {
 					System.out.println("O comando buy e usado na forma \"buy <wine> <seller> <quantity>\"");
 					wait = false;
 
-				} else {
+				} else { //////////////////////////////////////////////////////////////////////
+					// TODO////////////////// enviar informacao assinada (4.3) ///////////////
+					/////////////////////////////////////////////////////////////////////////
 					out.writeUTF("b");
 					out.writeUTF(tokens[1]);
 					out.writeUTF(tokens[2]);
@@ -187,9 +191,14 @@ public class Tintolmarket {
 					for (int i = 2; i < tokens.length; i++) {
 						sb.append(tokens[i] + " ");
 					}
+					///////////////////////////////////////////////////////////////////////
+					// TODO falta cifrar a mensagem com a key publica do user tokens[1] //
+					/////////////////////////////////////////////////////////////////////
+					String message = sb.toString();
+					String cypheredMessage = message;
 					out.writeUTF("t");
 					out.writeUTF(tokens[1]);
-					out.writeUTF(sb.toString());
+					out.writeUTF(cypheredMessage);
 				}
 			} else if (tokens[0].equals("r") || tokens[0].equals("read")) {
 				if (tokens.length != 1) {
