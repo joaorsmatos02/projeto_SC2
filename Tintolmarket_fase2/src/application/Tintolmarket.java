@@ -34,11 +34,19 @@ public class Tintolmarket {
 		try {
 			// retirar ip e port
 			String[] serverInfo = args[0].split(":");
-			FileInputStream truststorefile = new FileInputStream("stores//" + args[1]); // truststore
-			KeyStore trustStore = KeyStore.getInstance("JCEKS");
-			FileInputStream keystorefile = new FileInputStream("stores//" + args[2]); // keystore
-			KeyStore keyStore = KeyStore.getInstance("JCEKS");
+			String truststore = "stores//" + args[1];
+			String keystore = "stores//" + args[2];
 			String passwordKeystore = args[3];
+			System.setProperty("javax.net.ssl.trustStoreType", "JCEKS");
+			System.setProperty("javax.net.ssl.trustStore", truststore);
+			System.setProperty("javax.net.ssl.trustStorePassword", "123456");
+			System.setProperty("javax.net.ssl.keyStoreType", "JCEKS");
+			// System.setProperty("javax.net.ssl.keyStore", keystore);
+			System.setProperty("javax.net.ssl.keyStorePassword", passwordKeystore);
+			FileInputStream truststorefile = new FileInputStream(truststore);
+			KeyStore trustStore = KeyStore.getInstance("JCEKS");
+			FileInputStream keystorefile = new FileInputStream(keystore);
+			KeyStore keyStore = KeyStore.getInstance("JCEKS");
 			name = args[4];
 
 			// estabelecer ligacao
@@ -48,12 +56,7 @@ public class Tintolmarket {
 			else
 				socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(serverInfo[0], 12345);
 
-//			SSLContext sslContext = SSLContexts.custom()
-//			        .loadTrustMaterial(new File("client.truststore.jks"), "password".toCharArray())
-//			        .loadKeyMaterial(new File("client.keystore.jks"), "password".toCharArray(), "password".toCharArray())
-//			        .build();
-//
-			socket.startHandshake(); // Realiza a verificacao do certificado do servidor
+			// socket.startHandshake(); // Realiza a verificacao do certificado do servidor
 
 			// iniciar streams
 			DataInputStream in = new DataInputStream(socket.getInputStream());

@@ -34,22 +34,29 @@ public class TintolmarketServer {
 
 		// criar socket
 		try {
+			System.setProperty("javax.net.ssl.keyStoreType", "JCEKS");
 			if (args.length == 4) {
+				keyStore = "stores//" + args[2];
+				passwordKeystore = args[3];
+				System.setProperty("javax.net.ssl.keyStore", keyStore);
+				System.setProperty("javax.net.ssl.keyStorePassword", passwordKeystore);
 				serverSocket = (SSLServerSocket) SSLServerSocketFactory.getDefault()
 						.createServerSocket(Integer.parseInt(args[0]));
 				filePassword = args[1];
-				keyStore = args[2];
-				passwordKeystore = args[3];
 			} else if (args.length == 3) {
-				serverSocket = (SSLServerSocket) SSLServerSocketFactory.getDefault().createServerSocket(12345);
-				filePassword = args[0];
-				keyStore = args[1];
+				keyStore = "stores//" + args[1];
 				passwordKeystore = args[2];
+				System.setProperty("javax.net.ssl.keyStore", keyStore);
+				System.setProperty("javax.net.ssl.keyStorePassword", passwordKeystore);
+				serverSocket = (SSLServerSocket) SSLServerSocketFactory.getDefault().createServerSocket(12345);
+				serverSocket.setNeedClientAuth(true);
+				filePassword = args[0];
 			} else {
 				System.out.println(
 						"Argumentos invalidos. O servidor e iniciado na forma TintolmarketServer <port> <password-cifra> <keystore> <password-keystore>.");
 			}
 		} catch (IOException e1) {
+			e1.printStackTrace();
 			System.out.println("Erro na conexao com cliente");
 		}
 
@@ -57,10 +64,9 @@ public class TintolmarketServer {
 		//// TODO/////////////verificar integridade/criar blockchain////////////////////
 		////////////////////////////////////////////////////////////////////////////////
 
-		try { // handler de cada cliente
+		try {
 
-			// adaptar para ir buscar a keystore correta do servidor
-			File file = new File("stores//" + keyStore);
+			File file = new File(keyStore);
 			FileInputStream is = new FileInputStream(file);
 			KeyStore keyStoreFile = KeyStore.getInstance("JCEKS");
 			keyStoreFile.load(is, passwordKeystore.toCharArray());
