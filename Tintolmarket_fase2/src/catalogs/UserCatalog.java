@@ -1,19 +1,29 @@
 package catalogs;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.security.InvalidKeyException;
+import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 import entities.User;
 import exceptions.WrongCredentialsException;
@@ -62,8 +72,9 @@ public class UserCatalog {
 	/**
 	 * Efetua o login do utilizador ou cria um novo utilizador.
 	 * 
-	 * @param in  ObjectInputStream para ler dados do servidor.
-	 * @param out ObjectOutputStream para enviar dados para o servidor.
+	 * @param in       ObjectInputStream para ler dados do servidor.
+	 * @param out      ObjectOutputStream para enviar dados para o servidor.
+	 * @param keyStore a keystore do server
 	 * @return o nome de utilizador se o login for bem-sucedido, ou null caso
 	 *         contrario.
 	 * @throws IOException               Se ocorrer um erro ao ler ou escrever.
@@ -72,9 +83,16 @@ public class UserCatalog {
 	 * @throws KeyStoreException
 	 * @throws CertificateException
 	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws BadPaddingException
+	 * @throws IllegalBlockSizeException
+	 * @throws SignatureException
 	 */
-	public synchronized String login(DataInputStream in, DataOutputStream out) throws ClassNotFoundException,
-			IOException, WrongCredentialsException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
+	public synchronized String login(ObjectInputStream in, ObjectOutputStream out, KeyStore keyStore)
+			throws ClassNotFoundException, IOException, WrongCredentialsException, KeyStoreException,
+			NoSuchAlgorithmException, CertificateException, NoSuchPaddingException, InvalidKeyException,
+			IllegalBlockSizeException, BadPaddingException, SignatureException {
 
 		// TODO SECCAO 4.2 do projeto
 		// da primeira vez que um cliente se liga envia o seu certificado com a sua
@@ -89,6 +107,8 @@ public class UserCatalog {
 		File users = new File("txtFiles//userCreds.txt");
 		users.createNewFile();
 		Scanner sc = new Scanner(users);
+		Cipher encryptCipher = Cipher.getInstance("RSA");
+		Cipher decryptCipher = Cipher.getInstance("RSA");
 
 		// le user e verifica se ja existe
 		String user = in.readUTF();
@@ -107,17 +127,50 @@ public class UserCatalog {
 		byte[] nonce = new byte[8];
 		rd.nextBytes(nonce);
 
-		// se o user nao existir faz o seu registo
-		if (newUser) {
+		boolean result = true;
+		if (newUser) { // se o user nao existir faz o seu registo
 			out.write(nonce);
 			out.writeBoolean(newUser);
-			// fazer verificacoes
-			this.addUser(user);
-			FileWriter fw = new FileWriter("txtFiles//userCreds.txt", true);
-			fw.write(user + "\n");
-			fw.close();
+
+			for (int i = 0; i < 8 && result; i++) // verificar se o nonce e igual ao enviado
+				result = in.readByte() == nonce[i];
+
+			byte[] encryptedNonce = new byte[8]; // receber assinatura e certificado
+			for (int i = 0; i < 8 && result; i++)
+				encryptedNonce[i] = in.readByte();
+			Certificate cert = (Certificate) in.readObject();
+
+			// verificar assinatura e certificado
+			Signature signature = Signature.getInstance("SHA256withRSA");
+			signature.initVerify(cert.getPublicKey());
+			signature.update(encryptedNonce);
+			result = signature.verify(encryptedNonce); // ??????
+
+			if (result) {
+				this.addUser(user);
+				FileWriter fw = new FileWriter("txtFiles//userCreds.txt", true);
+				fw.write(user + ":" + "ficheiro do certificado??" + "\n");
+				fw.close();
+			}
+
 		} else {
 			// ir buscar certificado do user e cifrar nonce com a sua chave publica
+			Certificate cert = keyStore.getCertificate(user + "_key");
+			encryptCipher.init(Cipher.ENCRYPT_MODE, cert.getPublicKey());
+			byte[] encryptedNonce = encryptCipher.doFinal(nonce);
+
+			out.write(encryptedNonce);
+			out.writeBoolean(newUser);
+
+			for (int i = 0; i < 8 && result; i++) // verificar nonce recebido
+				result = in.readByte() == nonce[i];
+		}
+
+		if (result)
+			out.writeBoolean(true);
+		else {
+			out.writeBoolean(false);
+			user = null;
 		}
 
 		return user;

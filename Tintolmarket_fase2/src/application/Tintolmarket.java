@@ -1,11 +1,11 @@
 package application;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyStore;
@@ -74,8 +74,8 @@ public class Tintolmarket {
 				socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(serverInfo[0], 12345);
 
 			// iniciar streams
-			DataInputStream in = new DataInputStream(socket.getInputStream());
-			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 
 			// efetuar login
 			login(in, out, userKeys, cert);
@@ -107,7 +107,7 @@ public class Tintolmarket {
 	 * @throws BadPaddingException
 	 * @throws IllegalBlockSizeException
 	 */
-	private static void login(DataInputStream in, DataOutputStream out, KeyPair keys, Certificate cert)
+	private static void login(ObjectInputStream in, ObjectOutputStream out, KeyPair keys, Certificate cert)
 			throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
 			IllegalBlockSizeException, BadPaddingException {
 		out.writeUTF(name);
@@ -119,13 +119,17 @@ public class Tintolmarket {
 		cipher.init(Cipher.DECRYPT_MODE, keys.getPrivate());
 		byte[] decryptedNonce = cipher.doFinal(nonce);
 
-		out.write(decryptedNonce);
-
 		if (in.readBoolean()) { // novo user
+			out.write(nonce);
+			out.write(decryptedNonce);
+			out.writeObject(cert);
+		} else
+			out.write(decryptedNonce);
+
+		if (in.readBoolean())
 			System.out.println("Autenticacao bem sucedida!");
-		} else { // user ja tinha registo
-			System.out.println("Ocorreu um erro na autenticacao.");
-		}
+		else
+			System.out.println("Erro na autenticacao!");
 	}
 
 	/**
@@ -139,7 +143,7 @@ public class Tintolmarket {
 	 * @param keyStore   a keystore do cliente
 	 * @throws Exception Se ocorrer algum erro durante a interacao com o servidor.
 	 */
-	private static void interact(DataInputStream in, DataOutputStream out, KeyStore keyStore, KeyStore trustStore)
+	private static void interact(ObjectInputStream in, ObjectOutputStream out, KeyStore keyStore, KeyStore trustStore)
 			throws Exception {
 		System.out.println(
 				"Comandos disponiveis: \n\tadd <wine> <image> - adiciona um novo vinho identificado por wine, associado a imagem\r\n"

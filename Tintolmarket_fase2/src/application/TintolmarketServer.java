@@ -1,11 +1,11 @@
 package application;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.security.KeyStore;
 
 import javax.net.ssl.SSLServerSocket;
@@ -29,24 +29,24 @@ public class TintolmarketServer {
 		SSLServerSocket serverSocket = null;
 
 		String filePassword = null;
-		String keyStore = null;
+		String keyStorePath = null;
 		String passwordKeystore = null;
 
 		// criar socket
 		try {
 			System.setProperty("javax.net.ssl.keyStoreType", "JCEKS");
 			if (args.length == 4) {
-				keyStore = "stores//" + args[2];
+				keyStorePath = "stores//" + args[2];
 				passwordKeystore = args[3];
-				System.setProperty("javax.net.ssl.keyStore", keyStore);
+				System.setProperty("javax.net.ssl.keyStore", keyStorePath);
 				System.setProperty("javax.net.ssl.keyStorePassword", passwordKeystore);
 				serverSocket = (SSLServerSocket) SSLServerSocketFactory.getDefault()
 						.createServerSocket(Integer.parseInt(args[0]));
 				filePassword = args[1];
 			} else if (args.length == 3) {
-				keyStore = "stores//" + args[1];
+				keyStorePath = "stores//" + args[1];
 				passwordKeystore = args[2];
-				System.setProperty("javax.net.ssl.keyStore", keyStore);
+				System.setProperty("javax.net.ssl.keyStore", keyStorePath);
 				System.setProperty("javax.net.ssl.keyStorePassword", passwordKeystore);
 				serverSocket = (SSLServerSocket) SSLServerSocketFactory.getDefault().createServerSocket(12345);
 				serverSocket.setNeedClientAuth(true);
@@ -66,14 +66,14 @@ public class TintolmarketServer {
 
 		try {
 
-			File file = new File(keyStore);
+			File file = new File(keyStorePath);
 			FileInputStream is = new FileInputStream(file);
-			KeyStore keyStoreFile = KeyStore.getInstance("JCEKS");
-			keyStoreFile.load(is, passwordKeystore.toCharArray());
+			KeyStore keyStore = KeyStore.getInstance("JCEKS");
+			keyStore.load(is, passwordKeystore.toCharArray());
 
 			while (true) {
 				SSLSocket socket = (SSLSocket) serverSocket.accept();
-				ServerThread st = new ServerThread(socket, is, filePassword);
+				ServerThread st = new ServerThread(socket, keyStore, filePassword);
 				st.start();
 			}
 		} catch (Exception e) {
@@ -98,13 +98,13 @@ public class TintolmarketServer {
 class ServerThread extends Thread {
 
 	private SSLSocket socket;
-	private FileInputStream keyStore;
+	private KeyStore keyStore;
 	private String filePassword;
 	/////////////////////////////////////////////////////////
 	// TODO Adicionar contador de blocos na blockchain?? ////
 	/////////////////////////////////////////////////////////
 
-	public ServerThread(SSLSocket inSoc, FileInputStream keyStore, String filePassword) {
+	public ServerThread(SSLSocket inSoc, KeyStore keyStore, String filePassword) {
 		this.socket = inSoc;
 		this.keyStore = keyStore;
 		this.filePassword = filePassword;
@@ -113,17 +113,17 @@ class ServerThread extends Thread {
 	public void run() {
 
 		System.out.println("Cliente conectado");
-		DataOutputStream out = null;
-		DataInputStream in = null;
+		ObjectOutputStream out = null;
+		ObjectInputStream in = null;
 
 		try {
 			// iniciar streams
-			out = new DataOutputStream(socket.getOutputStream());
-			in = new DataInputStream(socket.getInputStream());
+			out = new ObjectOutputStream(socket.getOutputStream());
+			in = new ObjectInputStream(socket.getInputStream());
 
 			// fazer login do user
 			UserCatalog userCatalog = UserCatalog.getInstance();
-			String name = userCatalog.login(in, out);
+			String name = userCatalog.login(in, out, keyStore);
 			if (name != null) {
 				out.writeBoolean(true);
 				interact(userCatalog.getUserByName(name), in, out);
@@ -158,7 +158,7 @@ class ServerThread extends Thread {
 	 * @param out  ObjectOutputStream para enviar informacoes ao cliente
 	 * @throws Exception em caso de erro na comunicacao com o cliente
 	 */
-	private void interact(User user, DataInputStream in, DataOutputStream out) throws Exception {
+	private void interact(User user, ObjectInputStream in, ObjectOutputStream out) throws Exception {
 		boolean exit = false;
 		while (!exit) {
 			String command = in.readUTF();
