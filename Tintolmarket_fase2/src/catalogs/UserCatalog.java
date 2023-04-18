@@ -3,14 +3,11 @@ package catalogs;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -79,47 +76,48 @@ public class UserCatalog {
 	public synchronized String login(DataInputStream in, DataOutputStream out) throws ClassNotFoundException,
 			IOException, WrongCredentialsException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
 
+		// TODO SECCAO 4.2 do projeto
+		// da primeira vez que um cliente se liga envia o seu certificado com a sua
+		// chave publica
+		// o server guarda esse certificado na sua keystore
+		// quando se for autenticar a partir dai o server cria o nonce, cifra com a
+		// chave publica do cliente e envia para ele
+		// o cliente deve decifrar com a sua chave privada e enviar de volta para
+		// mostrar que tem a chave privada correspondente
+		/////////////////////////////////////////////////////////////////////////////
+
 		File users = new File("txtFiles//userCreds.txt");
 		users.createNewFile();
 		Scanner sc = new Scanner(users);
 
-		// le user e envia nonce
+		// le user e verifica se ja existe
 		String user = in.readUTF();
-		String password_keystore = in.readUTF();
-		SecureRandom rd = new SecureRandom();
-		out.writeLong(rd.nextLong());
-
-		// TODO SECCAO 4.2 do projeto////////////////////////////////////////////////////////////////////////////////////////////////
-		// da primeira vez que um cliente se liga envia o seu certificado com a sua chave publica
-		// o server guarda esse certificado na sua keystore
-		// quando se for autenticar a partir dai o server cria o nonce, cifra com a chave publica do cliente e envia para ele
-		// o cliente deve decifrar com a sua chave privada e enviar de volta para mostrar que tem a chave privada correspondente
-		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		// verifica se user existe e pass esta correta
 		boolean newUser = true;
 		String line;
 		while (sc.hasNextLine()) {
 			line = sc.nextLine();
-			FileInputStream kfile = new FileInputStream("..//stores//" + user + "keystore.jks"); // keystore
-			KeyStore kstore = KeyStore.getInstance("JCEKS");
-			kstore.load(kfile, password_keystore.toCharArray()); // password da keystore
-			Certificate cert = kstore.getCertificate("newcert_" + user); // alias da keypair
-
-			if (line.startsWith(user) && cert != null) {
+			if (line.startsWith(user)) {
 				newUser = false;
 				break;
 			}
-//			throw new WrongCredentialsException("Credenciais incorretas.");
 		}
 		sc.close();
 
-//		// se o user nao existir faz o seu registo
+		SecureRandom rd = new SecureRandom();
+		byte[] nonce = new byte[8];
+		rd.nextBytes(nonce);
+
+		// se o user nao existir faz o seu registo
 		if (newUser) {
+			out.write(nonce);
+			out.writeBoolean(newUser);
+			// fazer verificacoes
 			this.addUser(user);
 			FileWriter fw = new FileWriter("txtFiles//userCreds.txt", true);
 			fw.write(user + "\n");
 			fw.close();
+		} else {
+			// ir buscar certificado do user e cifrar nonce com a sua chave publica
 		}
 
 		return user;
