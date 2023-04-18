@@ -37,17 +37,16 @@ public class Tintolmarket {
 			String truststore = "stores//" + args[1];
 			String keystore = "stores//" + args[2];
 			String passwordKeystore = args[3];
+			name = args[4];
+			
 			System.setProperty("javax.net.ssl.trustStoreType", "JCEKS");
 			System.setProperty("javax.net.ssl.trustStore", truststore);
 			System.setProperty("javax.net.ssl.trustStorePassword", "123456");
-			System.setProperty("javax.net.ssl.keyStoreType", "JCEKS");
-			// System.setProperty("javax.net.ssl.keyStore", keystore);
-			System.setProperty("javax.net.ssl.keyStorePassword", passwordKeystore);
+			
 			FileInputStream truststorefile = new FileInputStream(truststore);
 			KeyStore trustStore = KeyStore.getInstance("JCEKS");
 			FileInputStream keystorefile = new FileInputStream(keystore);
 			KeyStore keyStore = KeyStore.getInstance("JCEKS");
-			name = args[4];
 
 			// estabelecer ligacao
 			if (serverInfo.length != 1)
@@ -55,8 +54,6 @@ public class Tintolmarket {
 						Integer.parseInt(serverInfo[1]));
 			else
 				socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(serverInfo[0], 12345);
-
-			// socket.startHandshake(); // Realiza a verificacao do certificado do servidor
 
 			// iniciar streams
 			DataInputStream in = new DataInputStream(socket.getInputStream());
@@ -89,7 +86,7 @@ public class Tintolmarket {
 	 *
 	 * @param in  ObjectInputStream para ler dados do servidor.
 	 * @param out ObjectOutputStream para enviar dados para o servidor.
-	 * @throws Exception Se ocorrer algum erro durante a intera�ao com o servidor.
+	 * @throws Exception Se ocorrer algum erro durante a interacao com o servidor.
 	 */
 	private static void interact(DataInputStream in, DataOutputStream out) throws Exception {
 		System.out.println(
@@ -186,6 +183,9 @@ public class Tintolmarket {
 					out.writeUTF(tokens[2]);
 				}
 			} else if (tokens[0].equals("t") || tokens[0].equals("talk")) {
+				/////////////////////////////////////////////////////////////////////////////////////
+				// TODO ir buscar certificado e extrair chave publica do destinatario á truststore //
+				/////////////////////////////////////////////////////////////////////////////////////
 				if (tokens.length < 3) {
 					System.out.println("O comando talk e usado na forma \"talk <user> <message>\"");
 					wait = false;
@@ -204,6 +204,9 @@ public class Tintolmarket {
 					out.writeUTF(cypheredMessage);
 				}
 			} else if (tokens[0].equals("r") || tokens[0].equals("read")) {
+				/////////////////////////////////////////////////////////////
+				// TODO ir buscar chave privada do destinatario á keystore //
+				/////////////////////////////////////////////////////////////
 				if (tokens.length != 1) {
 					System.out.println("O comando read e usado na forma \"read \"");
 					wait = false;
