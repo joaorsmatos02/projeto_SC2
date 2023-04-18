@@ -89,7 +89,12 @@ public class UserCatalog {
 		SecureRandom rd = new SecureRandom();
 		out.writeLong(rd.nextLong());
 
-		// TODO SECCAO 4.2 do projeto
+		// TODO SECCAO 4.2 do projeto////////////////////////////////////////////////////////////////////////////////////////////////
+		// da primeira vez que um cliente se liga envia o seu certificado com a sua chave publica
+		// o server guarda esse certificado na sua keystore
+		// quando se for autenticar a partir dai o server cria o nonce, cifra com a chave publica do cliente e envia para ele
+		// o cliente deve decifrar com a sua chave privada e enviar de volta para mostrar que tem a chave privada correspondente
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		// verifica se user existe e pass esta correta
 		boolean newUser = true;
