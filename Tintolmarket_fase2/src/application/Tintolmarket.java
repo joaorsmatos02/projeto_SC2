@@ -5,9 +5,20 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.Certificate;
 import java.util.Scanner;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
@@ -38,15 +49,22 @@ public class Tintolmarket {
 			String keystore = "stores//" + args[2];
 			String passwordKeystore = args[3];
 			name = args[4];
-			
+
 			System.setProperty("javax.net.ssl.trustStoreType", "JCEKS");
 			System.setProperty("javax.net.ssl.trustStore", truststore);
 			System.setProperty("javax.net.ssl.trustStorePassword", "123456");
-			
+
 			FileInputStream truststorefile = new FileInputStream(truststore);
 			KeyStore trustStore = KeyStore.getInstance("JCEKS");
+			trustStore.load(truststorefile, "123456".toCharArray());
+
 			FileInputStream keystorefile = new FileInputStream(keystore);
 			KeyStore keyStore = KeyStore.getInstance("JCEKS");
+			keyStore.load(keystorefile, passwordKeystore.toCharArray());
+			Certificate cert = keyStore.getCertificate(name + "_key"); // extrair o proprio certificado
+			PrivateKey privateKey = (PrivateKey) keyStore.getKey(name + "_key", passwordKeystore.toCharArray());
+			PublicKey publicKey = cert.getPublicKey();
+			KeyPair userKeys = new KeyPair(publicKey, privateKey);
 
 			// estabelecer ligacao
 			if (serverInfo.length != 1)
@@ -59,14 +77,11 @@ public class Tintolmarket {
 			DataInputStream in = new DataInputStream(socket.getInputStream());
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-			// enviar user
-			out.writeUTF(name);
-			if (in.readBoolean()) {
-				System.out.println("Autenticacao bem sucedida!");
-				// interagir com o server
-				interact(in, out);
-			} else
-				System.out.println("Ocorreu um erro na autenticacao.");
+			// efetuar login
+			login(in, out, userKeys, cert);
+
+			// interagir com o server
+			interact(in, out, keyStore, trustStore); // alterar atribs
 
 			// fechar ligacoes
 			in.close();
@@ -76,7 +91,41 @@ public class Tintolmarket {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
 
+	/**
+	 * Efetua o login no servidor
+	 * 
+	 * @param in   ObjectInputStream para ler dados do servidor.
+	 * @param out  ObjectOutputStream para enviar dados para o servidor.
+	 * @param keys as chaves do user
+	 * @param cert o certificado com a chave publica do user
+	 * @throws IOException               se ocorrer erro na comunicacao
+	 * @throws NoSuchPaddingException
+	 * @throws NoSuchAlgorithmException
+	 * @throws InvalidKeyException
+	 * @throws BadPaddingException
+	 * @throws IllegalBlockSizeException
+	 */
+	private static void login(DataInputStream in, DataOutputStream out, KeyPair keys, Certificate cert)
+			throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
+			IllegalBlockSizeException, BadPaddingException {
+		out.writeUTF(name);
+
+		byte[] nonce = new byte[8];
+		for (int i = 0; i < 8; i++)
+			nonce[i] = in.readByte();
+		Cipher cipher = Cipher.getInstance("RSA");
+		cipher.init(Cipher.DECRYPT_MODE, keys.getPrivate());
+		byte[] decryptedNonce = cipher.doFinal(nonce);
+
+		out.write(decryptedNonce);
+
+		if (in.readBoolean()) { // novo user
+			System.out.println("Autenticacao bem sucedida!");
+		} else { // user ja tinha registo
+			System.out.println("Ocorreu um erro na autenticacao.");
+		}
 	}
 
 	/**
@@ -84,11 +133,14 @@ public class Tintolmarket {
 	 * de texto. Os comandos sao lidos da entrada padrao e enviados ao servidor para
 	 * serem processados. As respostas do servidor sao apresentadas na saida padrao.
 	 *
-	 * @param in  ObjectInputStream para ler dados do servidor.
-	 * @param out ObjectOutputStream para enviar dados para o servidor.
+	 * @param in         ObjectInputStream para ler dados do servidor.
+	 * @param out        ObjectOutputStream para enviar dados para o servidor.
+	 * @param trustStore a truststore partilhada
+	 * @param keyStore   a keystore do cliente
 	 * @throws Exception Se ocorrer algum erro durante a interacao com o servidor.
 	 */
-	private static void interact(DataInputStream in, DataOutputStream out) throws Exception {
+	private static void interact(DataInputStream in, DataOutputStream out, KeyStore keyStore, KeyStore trustStore)
+			throws Exception {
 		System.out.println(
 				"Comandos disponiveis: \n\tadd <wine> <image> - adiciona um novo vinho identificado por wine, associado a imagem\r\n"
 						+ "image.\n"
@@ -184,7 +236,9 @@ public class Tintolmarket {
 				}
 			} else if (tokens[0].equals("t") || tokens[0].equals("talk")) {
 				/////////////////////////////////////////////////////////////////////////////////////
-				// TODO ir buscar certificado e extrair chave publica do destinatario á truststore //
+				// TODO ir buscar certificado e extrair chave publica do destinatario á
+				///////////////////////////////////////////////////////////////////////////////////// truststore
+				///////////////////////////////////////////////////////////////////////////////////// //
 				/////////////////////////////////////////////////////////////////////////////////////
 				if (tokens.length < 3) {
 					System.out.println("O comando talk e usado na forma \"talk <user> <message>\"");
