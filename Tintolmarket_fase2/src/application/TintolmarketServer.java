@@ -36,7 +36,7 @@ public class TintolmarketServer {
 		try {
 			System.setProperty("javax.net.ssl.keyStoreType", "JCEKS");
 			if (args.length == 4) {
-				keyStorePath = "stores//" + args[2];
+				keyStorePath = "stores//server//" + args[2];
 				passwordKeystore = args[3];
 				System.setProperty("javax.net.ssl.keyStore", keyStorePath);
 				System.setProperty("javax.net.ssl.keyStorePassword", passwordKeystore);
@@ -49,7 +49,6 @@ public class TintolmarketServer {
 				System.setProperty("javax.net.ssl.keyStore", keyStorePath);
 				System.setProperty("javax.net.ssl.keyStorePassword", passwordKeystore);
 				serverSocket = (SSLServerSocket) SSLServerSocketFactory.getDefault().createServerSocket(12345);
-				serverSocket.setNeedClientAuth(true);
 				filePassword = args[0];
 			} else {
 				System.out.println(
@@ -126,6 +125,7 @@ class ServerThread extends Thread {
 			String name = userCatalog.login(in, out, keyStore);
 			if (name != null) {
 				out.writeBoolean(true);
+				out.flush();
 				interact(userCatalog.getUserByName(name), in, out);
 			}
 
@@ -133,6 +133,7 @@ class ServerThread extends Thread {
 			try {
 				System.out.println(e.getMessage());
 				out.writeBoolean(false);
+				out.flush();
 			} catch (IOException e1) {
 				System.out.println("Ocorreu um erro na comunicacao");
 			}
@@ -243,8 +244,10 @@ class ServerThread extends Thread {
 					exit = true;
 					break;
 				}
+				out.flush();
 			} catch (Exception e) {
 				out.writeUTF(e.getMessage());
+				out.flush();
 			}
 		}
 	}

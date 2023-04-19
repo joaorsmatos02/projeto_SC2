@@ -3,22 +3,16 @@ package application;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.Signature;
 import java.security.cert.Certificate;
 import java.util.Scanner;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
@@ -44,11 +38,11 @@ public class Tintolmarket {
 
 		try {
 			// retirar ip e port
+			name = args[4];
 			String[] serverInfo = args[0].split(":");
 			String truststore = "stores//" + args[1];
-			String keystore = "stores//" + args[2];
+			String keystore = "stores//" + name + "//" + args[2];
 			String passwordKeystore = args[3];
-			name = args[4];
 
 			System.setProperty("javax.net.ssl.trustStoreType", "JCEKS");
 			System.setProperty("javax.net.ssl.trustStore", truststore);
@@ -74,8 +68,8 @@ public class Tintolmarket {
 				socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(serverInfo[0], 12345);
 
 			// iniciar streams
-			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
 			// efetuar login
 			login(in, out, userKeys, cert);
@@ -100,36 +94,47 @@ public class Tintolmarket {
 	 * @param out  ObjectOutputStream para enviar dados para o servidor.
 	 * @param keys as chaves do user
 	 * @param cert o certificado com a chave publica do user
-	 * @throws IOException               se ocorrer erro na comunicacao
-	 * @throws NoSuchPaddingException
-	 * @throws NoSuchAlgorithmException
-	 * @throws InvalidKeyException
-	 * @throws BadPaddingException
-	 * @throws IllegalBlockSizeException
+	 * @throws Exception se ocorrer erro no processo
 	 */
 	private static void login(ObjectInputStream in, ObjectOutputStream out, KeyPair keys, Certificate cert)
-			throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
-			IllegalBlockSizeException, BadPaddingException {
+			throws Exception {
 		out.writeUTF(name);
+		out.flush();
 
 		byte[] nonce = new byte[8];
 		for (int i = 0; i < 8; i++)
 			nonce[i] = in.readByte();
-		Cipher cipher = Cipher.getInstance("RSA");
-		cipher.init(Cipher.DECRYPT_MODE, keys.getPrivate());
-		byte[] decryptedNonce = cipher.doFinal(nonce);
+
+		byte[] signedNonce = sign(nonce, keys.getPrivate());
 
 		if (in.readBoolean()) { // novo user
 			out.write(nonce);
-			out.write(decryptedNonce);
+			out.write(signedNonce);
 			out.writeObject(cert);
-		} else
-			out.write(decryptedNonce);
+		} else { // user ja registado
+			out.write(signedNonce);
+		}
+		out.flush();
 
 		if (in.readBoolean())
 			System.out.println("Autenticacao bem sucedida!");
 		else
 			System.out.println("Erro na autenticacao!");
+	}
+
+	/**
+	 * Assina o nonce com a chave privada fornecida
+	 * 
+	 * @param nonce o nonce a assinar
+	 * @param pk    a chave a usar na assinatura
+	 * @return um byte[] com o nonce assinada
+	 * @throws Exception se ocorrer algum erro durante a assinatura
+	 */
+	private static byte[] sign(byte[] nonce, PrivateKey pk) throws Exception {
+		Signature s = Signature.getInstance("SHA256withRSA");
+		s.initSign(pk);
+		s.update(nonce);
+		return s.sign();
 	}
 
 	/**
@@ -240,9 +245,8 @@ public class Tintolmarket {
 				}
 			} else if (tokens[0].equals("t") || tokens[0].equals("talk")) {
 				/////////////////////////////////////////////////////////////////////////////////////
-				// TODO ir buscar certificado e extrair chave publica do destinatario á
+				// TODO ir buscar certificado e extrair chave publica do destinatario a
 				///////////////////////////////////////////////////////////////////////////////////// truststore
-				///////////////////////////////////////////////////////////////////////////////////// //
 				/////////////////////////////////////////////////////////////////////////////////////
 				if (tokens.length < 3) {
 					System.out.println("O comando talk e usado na forma \"talk <user> <message>\"");
@@ -263,7 +267,7 @@ public class Tintolmarket {
 				}
 			} else if (tokens[0].equals("r") || tokens[0].equals("read")) {
 				/////////////////////////////////////////////////////////////
-				// TODO ir buscar chave privada do destinatario á keystore //
+				// TODO ir buscar chave privada do destinatario a keystore //
 				/////////////////////////////////////////////////////////////
 				if (tokens.length != 1) {
 					System.out.println("O comando read e usado na forma \"read \"");
@@ -293,6 +297,7 @@ public class Tintolmarket {
 								+ "\ttalk <user> <message> - permite enviar uma mensagem privada ao utilizador user.\n"
 								+ "\tread - permite ler as novas mensagens recebidas.");
 			}
+			out.flush();
 
 			if (wait) {
 				System.out.println(in.readUTF());
