@@ -14,6 +14,7 @@ import javax.net.ssl.SSLSocket;
 
 import catalogs.UserCatalog;
 import entities.User;
+import exceptions.WineNotFoundException;
 import exceptions.WrongCredentialsException;
 import handlers.AddInfoHandler;
 import handlers.ShowInfoHandler;
@@ -245,7 +246,8 @@ class ServerThread extends Thread {
 					break;
 				}
 				out.flush();
-			} catch (Exception e) {
+			} catch (WineNotFoundException e) {
+				out.writeBoolean(false);
 				out.writeUTF(e.getMessage());
 				out.flush();
 			}
