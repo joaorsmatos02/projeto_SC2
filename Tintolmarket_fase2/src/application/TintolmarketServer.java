@@ -128,6 +128,7 @@ class ServerThread extends Thread {
 				out.writeBoolean(true);
 				out.flush();
 				interact(userCatalog.getUserByName(name), in, out);
+				System.out.println("Cliente desconectado");
 			}
 
 		} catch (WrongCredentialsException e) {
@@ -164,82 +165,31 @@ class ServerThread extends Thread {
 		boolean exit = false;
 		while (!exit) {
 			String command = in.readUTF();
-			String arg1 = null;
-			String arg2 = null;
-			int num;
 			try {
 				switch (command) {
 				case "a":
-					arg1 = in.readUTF();
-					long fileSize = in.readLong(); // ler tamanho da imagem
-					int bytesRead;
-					long totalBytesRead = 0;
-					File imgFiles = new File("imgFiles");
-					if (!imgFiles.exists())
-						imgFiles.mkdir();
-					File image = new File("imgFiles//" + in.readUTF()); // ler nome da imagem
-					FileOutputStream file = new FileOutputStream(image);
-					byte[] bytes = new byte[16 * 1024];
-					while (totalBytesRead < fileSize) {
-						bytesRead = in.read(bytes);
-						file.write(bytes, 0, bytesRead);
-						totalBytesRead += bytesRead;
-					}
-					file.close();
-					AddInfoHandler.add(arg1, image);
-					out.writeUTF(String.format("Vinho %s adicionado com sucesso!", arg1));
+					add(in, out);
 					break;
 				case "s":
-					////////////////////////////////////////////////////////////////////////
-					// TODO verificar assinatura do cliente e escrever na blockchain ///////
-					////////////////////////////////////////////////////////////////////////
-					arg1 = in.readUTF();
-					double price = Double.parseDouble(in.readUTF());
-					num = Integer.parseInt(in.readUTF());
-					TransactionHandler.sell(user, arg1, price, num);
-					out.writeUTF(String.format("%d quantidade(s) de vinho %s colocada(s) a venda por %.2f com sucesso!",
-							num, arg1, price));
+					sell(in, out, user);
 					break;
 				case "v":
-					arg1 = in.readUTF();
-					String[] result = ShowInfoHandler.view(arg1);
-					out.writeUTF(result[0]); // enviar printWine
-					File img = new File(result[1]);
-					FileInputStream imgStream = new FileInputStream(img);
-					out.writeLong(imgStream.getChannel().size()); // enviar tamanho
-					out.writeUTF(img.getName()); // enviar nome
-					byte[] buffer = new byte[16 * 1024];
-					while (imgStream.read(buffer) > 0)
-						out.write(buffer);
-					imgStream.close();
+					view(in, out);
 					break;
 				case "b":
-					////////////////////////////////////////////////////////////////////////
-					// TODO verificar assinatura do cliente e escrever na blockchain ///////
-					////////////////////////////////////////////////////////////////////////
-					arg1 = in.readUTF();
-					arg2 = in.readUTF();
-					num = Integer.parseInt(in.readUTF());
-					TransactionHandler.buy(user, arg1, arg2, num);
-					out.writeUTF(String.format("O utilizador %s comprou %d unidades de vinho %s", arg2, num, arg1));
+					buy(in, out, user);
 					break;
 				case "w":
-					out.writeUTF(ShowInfoHandler.wallet(user));
+					wallet(out, user);
 					break;
 				case "c":
-					arg1 = in.readUTF();
-					num = Integer.parseInt(in.readUTF());
-					AddInfoHandler.classify(user, arg1, num);
-					out.writeUTF(String.format("Atribuiu %d estrelas ao vinho %s", num, arg1));
+					classify(in, out, user);
 					break;
 				case "t":
-					String recipient = in.readUTF();
-					String message = in.readUTF();
-					AddInfoHandler.talk(user, recipient, message);
-					out.writeUTF(String.format("Enviou a mensagem \"%s\" ao utilizador %s", message, recipient));
+					talk(in, out, user);
 					break;
 				case "r":
-					out.writeUTF(ShowInfoHandler.read(user));
+					read(out, user);
 					break;
 				default:
 					exit = true;
@@ -252,6 +202,86 @@ class ServerThread extends Thread {
 				out.flush();
 			}
 		}
+	}
+
+	private static void add(ObjectInputStream in, ObjectOutputStream out) throws Exception {
+		String arg1 = in.readUTF();
+		long fileSize = in.readLong(); // ler tamanho da imagem
+		int bytesRead;
+		long totalBytesRead = 0;
+		File imgFiles = new File("imgFiles");
+		if (!imgFiles.exists())
+			imgFiles.mkdir();
+		File image = new File("imgFiles//" + in.readUTF()); // ler nome da imagem
+		FileOutputStream file = new FileOutputStream(image);
+		byte[] bytes = new byte[16 * 1024];
+		while (totalBytesRead < fileSize) {
+			bytesRead = in.read(bytes);
+			file.write(bytes, 0, bytesRead);
+			totalBytesRead += bytesRead;
+		}
+		file.close();
+		AddInfoHandler.add(arg1, image);
+		out.writeUTF(String.format("Vinho %s adicionado com sucesso!", arg1));
+	}
+
+	private static void sell(ObjectInputStream in, ObjectOutputStream out, User user) throws Exception {
+		////////////////////////////////////////////////////////////////////////
+		// TODO verificar assinatura do cliente e escrever na blockchain ///////
+		////////////////////////////////////////////////////////////////////////
+		String arg1 = in.readUTF();
+		double price = Double.parseDouble(in.readUTF());
+		int num = Integer.parseInt(in.readUTF());
+		TransactionHandler.sell(user, arg1, price, num);
+		out.writeUTF(String.format("%d quantidade(s) de vinho %s colocada(s) a venda por %.2f com sucesso!", num, arg1,
+				price));
+	}
+
+	private static void view(ObjectInputStream in, ObjectOutputStream out) throws Exception {
+		String arg1 = in.readUTF();
+		String[] result = ShowInfoHandler.view(arg1);
+		out.writeUTF(result[0]); // enviar printWine
+		File img = new File(result[1]);
+		FileInputStream imgStream = new FileInputStream(img);
+		out.writeLong(imgStream.getChannel().size()); // enviar tamanho
+		out.writeUTF(img.getName()); // enviar nome
+		byte[] buffer = new byte[16 * 1024];
+		while (imgStream.read(buffer) > 0)
+			out.write(buffer);
+		imgStream.close();
+	}
+
+	private static void buy(ObjectInputStream in, ObjectOutputStream out, User user) throws Exception {
+		////////////////////////////////////////////////////////////////////////
+		// TODO verificar assinatura do cliente e escrever na blockchain ///////
+		////////////////////////////////////////////////////////////////////////
+		String arg1 = in.readUTF();
+		String arg2 = in.readUTF();
+		int num = Integer.parseInt(in.readUTF());
+		TransactionHandler.buy(user, arg1, arg2, num);
+		out.writeUTF(String.format("O utilizador %s comprou %d unidades de vinho %s", arg2, num, arg1));
+	}
+
+	private static void wallet(ObjectOutputStream out, User user) throws Exception {
+		out.writeUTF(ShowInfoHandler.wallet(user));
+	}
+
+	private static void classify(ObjectInputStream in, ObjectOutputStream out, User user) throws Exception {
+		String arg1 = in.readUTF();
+		int num = Integer.parseInt(in.readUTF());
+		AddInfoHandler.classify(user, arg1, num);
+		out.writeUTF(String.format("Atribuiu %d estrelas ao vinho %s", num, arg1));
+	}
+
+	private static void talk(ObjectInputStream in, ObjectOutputStream out, User user) throws Exception {
+		String recipient = in.readUTF();
+		String message = in.readUTF();
+		AddInfoHandler.talk(user, recipient, message);
+		out.writeUTF(String.format("Enviou a mensagem \"%s\" ao utilizador %s", message, recipient));
+	}
+
+	private static void read(ObjectOutputStream out, User user) throws Exception {
+		out.writeUTF(ShowInfoHandler.read(user));
 	}
 
 }
