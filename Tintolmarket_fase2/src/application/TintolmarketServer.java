@@ -271,7 +271,7 @@ class ServerThread extends Thread {
 		String recipient = in.readUTF();
 		String message = in.readUTF();
 		AddInfoHandler.talk(user, recipient, message);
-		out.writeUTF(String.format("Enviou a mensagem \"%s\" ao utilizador %s", message, recipient));
+		out.writeUTF(String.format("Enviou uma mensagem ao utilizador %s", recipient));
 	}
 
 	private static void read(ObjectOutputStream out, User user) throws Exception {

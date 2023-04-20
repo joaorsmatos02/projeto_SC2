@@ -5,15 +5,18 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.security.KeyPair;
+import java.security.Key;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.util.Base64;
 import java.util.Scanner;
 
+import javax.crypto.Cipher;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
@@ -58,8 +61,6 @@ public class Tintolmarket {
 			keyStore.load(keystorefile, passwordKeystore.toCharArray());
 			Certificate cert = keyStore.getCertificate(name + "_key"); // extrair o proprio certificado
 			PrivateKey privateKey = (PrivateKey) keyStore.getKey(name + "_key", passwordKeystore.toCharArray());
-			PublicKey publicKey = cert.getPublicKey();
-			KeyPair userKeys = new KeyPair(publicKey, privateKey);
 
 			// estabelecer ligacao
 			if (serverInfo.length != 1)
@@ -73,16 +74,17 @@ public class Tintolmarket {
 			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
 			// efetuar login
-			login(in, out, userKeys, cert);
+			login(in, out, privateKey, cert);
 
 			// interagir com o server
-			interact(in, out, keyStore, trustStore); // alterar atribs
+			interact(in, out, privateKey, trustStore); // alterar atribs
 
 			// fechar ligacoes
 			in.close();
 			out.close();
 			socket.close();
-
+			keystorefile.close();
+			truststorefile.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -97,23 +99,21 @@ public class Tintolmarket {
 	 * @param cert o certificado com a chave publica do user
 	 * @throws Exception se ocorrer erro no processo
 	 */
-	private static void login(ObjectInputStream in, ObjectOutputStream out, KeyPair keys, Certificate cert)
+	private static void login(ObjectInputStream in, ObjectOutputStream out, PrivateKey key, Certificate cert)
 			throws Exception {
 		out.writeUTF(name);
 		out.flush();
 
-		byte[] nonce = new byte[8];
-		for (int i = 0; i < 8; i++)
-			nonce[i] = in.readByte();
+		byte[] nonce = (byte[]) in.readObject();
 
-		byte[] signedNonce = sign(nonce, keys.getPrivate());
+		byte[] signedNonce = sign(nonce, key);
 
 		if (in.readBoolean()) { // novo user
-			out.write(nonce);
-			out.write(signedNonce);
+			out.writeObject(nonce);
+			out.writeObject(signedNonce);
 			out.writeObject(cert);
 		} else { // user ja registado
-			out.write(signedNonce);
+			out.writeObject(signedNonce);
 		}
 		out.flush();
 
@@ -149,7 +149,7 @@ public class Tintolmarket {
 	 * @param keyStore   a keystore do cliente
 	 * @throws Exception Se ocorrer algum erro durante a interacao com o servidor.
 	 */
-	private static void interact(ObjectInputStream in, ObjectOutputStream out, KeyStore keyStore, KeyStore trustStore)
+	private static void interact(ObjectInputStream in, ObjectOutputStream out, PrivateKey key, KeyStore trustStore)
 			throws Exception {
 		printCommands();
 		Scanner sc = new Scanner(System.in);
@@ -174,9 +174,9 @@ public class Tintolmarket {
 			} else if (tokens[0].equals("c") || tokens[0].equals("classify")) {
 				wait = classify(out, tokens);
 			} else if (tokens[0].equals("t") || tokens[0].equals("talk")) {
-				wait = talk(out, tokens);
+				wait = talk(out, trustStore, tokens);
 			} else if (tokens[0].equals("r") || tokens[0].equals("read")) {
-				wait = read(out, tokens);
+				wait = read(out, in, key, tokens);
 			} else if (tokens[0].equals("exit")) {
 				System.out.println("Programa encerrado.");
 				out.writeUTF("exit");
@@ -304,25 +304,17 @@ public class Tintolmarket {
 		return wait;
 	}
 
-	private static boolean talk(ObjectOutputStream out, String[] tokens) throws Exception {
+	private static boolean talk(ObjectOutputStream out, KeyStore trustStore, String[] tokens) throws Exception {
 		boolean wait = true;
-		/////////////////////////////////////////////////////////////////////////////////////
-		// TODO ir buscar certificado e extrair chave publica do destinatario a
-		///////////////////////////////////////////////////////////////////////////////////// truststore
-		/////////////////////////////////////////////////////////////////////////////////////
 		if (tokens.length < 3) {
 			System.out.println("O comando talk e usado na forma \"talk <user> <message>\"");
 			wait = false;
 		} else {
 			StringBuilder sb = new StringBuilder();
-			for (int i = 2; i < tokens.length; i++) {
+			for (int i = 2; i < tokens.length; i++)
 				sb.append(tokens[i] + " ");
-			}
-			///////////////////////////////////////////////////////////////////////
-			// TODO falta cifrar a mensagem com a key publica do user tokens[1] //
-			/////////////////////////////////////////////////////////////////////
-			String message = sb.toString();
-			String cypheredMessage = message;
+			Certificate dest = trustStore.getCertificate("newcert_" + tokens[1]);
+			String cypheredMessage = cipher(Cipher.ENCRYPT_MODE, dest.getPublicKey(), sb.toString());
 			out.writeUTF("t");
 			out.writeUTF(tokens[1]);
 			out.writeUTF(cypheredMessage);
@@ -330,18 +322,24 @@ public class Tintolmarket {
 		return wait;
 	}
 
-	private static boolean read(ObjectOutputStream out, String[] tokens) throws Exception {
-		boolean wait = true;
-		/////////////////////////////////////////////////////////////
-		// TODO ir buscar chave privada do destinatario a keystore //
-		/////////////////////////////////////////////////////////////
+	private static boolean read(ObjectOutputStream out, ObjectInputStream in, PrivateKey key, String[] tokens)
+			throws Exception {
 		if (tokens.length != 1) {
 			System.out.println("O comando read e usado na forma \"read \"");
-			wait = false;
 		} else {
 			out.writeUTF("r");
+			out.flush();
+			String recieved = in.readUTF();
+			String[] users = recieved.split("(?!\\[.*), (?![^\\[]*?\\])");
+			for (String s : users) {
+				s = s.substring(s.indexOf("[") + 1, s.length() - 3);
+				String[] msgs = s.split(", ");
+				for (String msg : msgs)
+					recieved = recieved.replace(msg, cipher(Cipher.DECRYPT_MODE, key, msg));
+			}
+			System.out.println(recieved);
 		}
-		return wait;
+		return false;
 	}
 
 	private static void getImage(ObjectInputStream in) throws Exception {
@@ -354,5 +352,18 @@ public class Tintolmarket {
 		byte[] bytes = (byte[]) in.readObject();
 		file.write(bytes, 0, bytes.length);
 		file.close();
+	}
+
+	private static String cipher(int mode, Key key, String data) throws Exception {
+		Cipher cipher = Cipher.getInstance("RSA");
+		if (mode == Cipher.DECRYPT_MODE) {
+			cipher.init(Cipher.DECRYPT_MODE, (PrivateKey) key);
+			byte[] decryptedData = cipher.doFinal(Base64.getDecoder().decode(data));
+			return new String(decryptedData, StandardCharsets.UTF_8);
+		} else {
+			cipher.init(Cipher.ENCRYPT_MODE, (PublicKey) key);
+			byte[] encryptedData = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
+			return Base64.getEncoder().encodeToString(encryptedData);
+		}
 	}
 }
