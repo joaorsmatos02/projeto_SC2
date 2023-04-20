@@ -96,7 +96,7 @@ public class UserCatalog {
 		SecureRandom rd = new SecureRandom();
 		byte[] nonce = new byte[8];
 		rd.nextBytes(nonce);
-		out.write(nonce);
+		out.writeObject(nonce);
 		out.flush();
 
 		boolean result = true;
@@ -105,9 +105,7 @@ public class UserCatalog {
 		if (newUser) { // se o user nao existir faz o seu registo
 			result = registerUser(in, out, keyStore, user, nonce);
 		} else { // se user existir
-			byte[] encryptedNonce = new byte[256];
-			for (int i = 0; i < 256 && result; i++)
-				encryptedNonce[i] = in.readByte();
+			byte[] encryptedNonce = (byte[]) in.readObject();
 			CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
 			FileInputStream fis = new FileInputStream("stores//server//" + certName);
 			Certificate certificate = certificateFactory.generateCertificate(fis);
@@ -128,14 +126,12 @@ public class UserCatalog {
 			byte[] nonce) throws Exception {
 		boolean result = true;
 
-		for (int i = 0; i < 8 && result; i++) // verificar se o nonce e igual ao enviado
-			result = in.readByte() == nonce[i];
+		byte[] recievedNonce = (byte[]) in.readObject();
+		result = Arrays.equals(recievedNonce, nonce);
 		if (!result)
 			return false;
 
-		byte[] encryptedNonce = new byte[256]; // receber assinatura e certificado
-		for (int i = 0; i < 256 && result; i++)
-			encryptedNonce[i] = in.readByte();
+		byte[] encryptedNonce = (byte[]) in.readObject(); // receber assinatura e certificado
 		Certificate cert = (Certificate) in.readObject();
 
 		// verificar assinatura e certificado
@@ -155,7 +151,7 @@ public class UserCatalog {
 			fw.write("-----END CERTIFICATE-----\n");
 			fw.close();
 
-			keyStore.setCertificateEntry(user + "_key", cert);
+			keyStore.setCertificateEntry("newcert_" + user, cert);
 
 			this.addUser(user);
 			fw = new FileWriter("txtFiles//userCreds.txt", true);
@@ -226,7 +222,7 @@ public class UserCatalog {
 		String[] hashContents = line.split("(?!\\[.*), (?![^\\[]*?\\])");
 		if (hashContents[0].contains("=")) {
 			for (String s : hashContents) {
-				String[] item = s.split("=");
+				String[] item = s.split("=", 2);
 				item[1] = item[1].substring(1, item[1].length() - 1);
 				List<String> value = Arrays.asList(item[1].split(", "));
 				result.put(item[0], value);
