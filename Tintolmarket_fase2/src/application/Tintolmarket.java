@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Files;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.PrivateKey;
@@ -165,7 +166,6 @@ public class Tintolmarket {
 				wait = sell(out, tokens);
 			} else if (tokens[0].equals("v") || tokens[0].equals("view")) {
 				wait = view(out, tokens);
-				out.flush();
 				image = in.readBoolean();
 			} else if (tokens[0].equals("b") || tokens[0].equals("buy")) {
 				wait = buy(out, tokens);
@@ -224,13 +224,9 @@ public class Tintolmarket {
 			if (img.exists()) {
 				out.writeUTF("a");
 				out.writeUTF(tokens[1]);
-				FileInputStream file = new FileInputStream(img);
-				out.writeLong(file.getChannel().size()); // enviar tamanho
-				out.writeUTF(img.getName()); // enviar nome
-				byte[] bytes = new byte[16 * 1024];
-				while (file.read(bytes) > 0)
-					out.write(bytes);
-				file.close();
+				out.writeUTF(img.getName());
+				byte[] bytes = Files.readAllBytes(img.toPath());
+				out.writeObject(bytes);
 			} else {
 				System.out.println("A imagem " + tokens[2] + " nao existe!");
 				wait = false;
@@ -263,6 +259,7 @@ public class Tintolmarket {
 		} else {
 			out.writeUTF("v");
 			out.writeUTF(tokens[1]);
+			out.flush();
 		}
 		return wait;
 	}
@@ -348,23 +345,14 @@ public class Tintolmarket {
 	}
 
 	private static void getImage(ObjectInputStream in) throws Exception {
-		long fileSize = in.readLong(); // ler tamanho da imagem
-		int bytesRead;
-		long totalBytesRead = 0;
 		File dir = new File(name);
 		if (!dir.exists())
 			dir.mkdir();
 		File img = new File(name + "//" + in.readUTF());
 		img.createNewFile();
 		FileOutputStream file = new FileOutputStream(img);
-		byte[] bytes = new byte[16 * 1024];
-		while (totalBytesRead < fileSize) {
-			bytesRead = in.read(bytes);
-			file.write(bytes, 0, bytesRead);
-			totalBytesRead += bytesRead;
-		}
+		byte[] bytes = (byte[]) in.readObject();
+		file.write(bytes, 0, bytes.length);
 		file.close();
-		while (in.available() > 0) // limpar stream depois de transferir ficheiro
-			in.read(bytes);
 	}
 }

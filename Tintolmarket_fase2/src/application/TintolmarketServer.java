@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Files;
 import java.security.KeyStore;
 
 import javax.net.ssl.SSLServerSocket;
@@ -127,7 +128,7 @@ class ServerThread extends Thread {
 			if (name != null) {
 				out.writeBoolean(true);
 				out.flush();
-				interact(userCatalog.getUserByName(name), in, out);
+				interact(userCatalog.getUserByName(name), socket, in, out);
 				System.out.println("Cliente desconectado");
 			}
 
@@ -161,11 +162,11 @@ class ServerThread extends Thread {
 	 * @param out  ObjectOutputStream para enviar informacoes ao cliente
 	 * @throws Exception em caso de erro na comunicacao com o cliente
 	 */
-	private void interact(User user, ObjectInputStream in, ObjectOutputStream out) throws Exception {
+	private void interact(User user, SSLSocket socket, ObjectInputStream in, ObjectOutputStream out) throws Exception {
 		boolean exit = false;
 		while (!exit) {
-			String command = in.readUTF();
 			try {
+				String command = in.readUTF();
 				switch (command) {
 				case "a":
 					add(in, out);
@@ -200,26 +201,22 @@ class ServerThread extends Thread {
 				out.writeBoolean(false);
 				out.writeUTF(e.getMessage());
 				out.flush();
+			} catch (Exception e) {
+				out.writeUTF(e.getMessage());
+				out.flush();
 			}
 		}
 	}
 
 	private static void add(ObjectInputStream in, ObjectOutputStream out) throws Exception {
 		String arg1 = in.readUTF();
-		long fileSize = in.readLong(); // ler tamanho da imagem
-		int bytesRead;
-		long totalBytesRead = 0;
 		File imgFiles = new File("imgFiles");
 		if (!imgFiles.exists())
 			imgFiles.mkdir();
 		File image = new File("imgFiles//" + in.readUTF()); // ler nome da imagem
 		FileOutputStream file = new FileOutputStream(image);
-		byte[] bytes = new byte[16 * 1024];
-		while (totalBytesRead < fileSize) {
-			bytesRead = in.read(bytes);
-			file.write(bytes, 0, bytesRead);
-			totalBytesRead += bytesRead;
-		}
+		byte[] bytes = (byte[]) in.readObject();
+		file.write(bytes, 0, bytes.length);
 		file.close();
 		AddInfoHandler.add(arg1, image);
 		out.writeUTF(String.format("Vinho %s adicionado com sucesso!", arg1));
@@ -240,15 +237,12 @@ class ServerThread extends Thread {
 	private static void view(ObjectInputStream in, ObjectOutputStream out) throws Exception {
 		String arg1 = in.readUTF();
 		String[] result = ShowInfoHandler.view(arg1);
+		out.writeBoolean(true);
 		out.writeUTF(result[0]); // enviar printWine
 		File img = new File(result[1]);
-		FileInputStream imgStream = new FileInputStream(img);
-		out.writeLong(imgStream.getChannel().size()); // enviar tamanho
-		out.writeUTF(img.getName()); // enviar nome
-		byte[] buffer = new byte[16 * 1024];
-		while (imgStream.read(buffer) > 0)
-			out.write(buffer);
-		imgStream.close();
+		out.writeUTF(img.getName());
+		byte[] buffer = Files.readAllBytes(img.toPath());
+		out.writeObject(buffer);
 	}
 
 	private static void buy(ObjectInputStream in, ObjectOutputStream out, User user) throws Exception {
