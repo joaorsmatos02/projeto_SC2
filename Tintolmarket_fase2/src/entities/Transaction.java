@@ -8,62 +8,59 @@ import catalogs.UserCatalog;
 
 public abstract class Transaction {
 
-	private String vinhoId;
-	private int unidades;
-	private double valorUnidade;
+	private String wineID;
+	private int units;
+	private double unitValue;
 	private String userId;
-	private byte[] assinatura;
+	private byte[] signature;
 
 	public Transaction(String vinhoId, int unidades, double valorUnidade, String userId, byte[] assinatura) {
-		this.vinhoId = vinhoId;
-		this.unidades = unidades;
-		this.valorUnidade = valorUnidade;
+		this.wineID = vinhoId;
+		this.units = unidades;
+		this.unitValue = valorUnidade;
 		this.userId = userId;
-		this.assinatura = assinatura;
+		this.signature = assinatura;
 	}
 
-	public boolean verificarAssinatura(PublicKey chavePublica) {
-		String s = String.format("%s%d%.2f%s", vinhoId, unidades, valorUnidade, userId);
+	public boolean validateTransaction() {
+		PublicKey key = UserCatalog.getInstance().getPublicKey(userId);
+		String f = String.format("%s%d%.2f%s", wineID, units, unitValue, userId);
 
 		try {
-			Signature signature = Signature.getInstance("SHA256withRSA");
-			signature.initVerify(chavePublica);
-			signature.update(s.getBytes(StandardCharsets.UTF_8));
-			return signature.verify(assinatura);
+			Signature s = Signature.getInstance("SHA256withRSA");
+			s.initVerify(key);
+			s.update(f.getBytes(StandardCharsets.UTF_8));
+			return s.verify(signature);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
 	}
 
-	public boolean validateTransaction() {
-		return verificarAssinatura(UserCatalog.getInstance().getPublicKey(userId));
-	}
-
 	// Get & Set Acho que nao vamos usar
 
 	public String getVinhoId() {
-		return vinhoId;
+		return wineID;
 	}
 
 	public void setVinhoId(String vinhoId) {
-		this.vinhoId = vinhoId;
+		this.wineID = vinhoId;
 	}
 
 	public int getUnidades() {
-		return unidades;
+		return units;
 	}
 
 	public void setUnidades(int unidades) {
-		this.unidades = unidades;
+		this.units = unidades;
 	}
 
 	public double getValorUnidade() {
-		return valorUnidade;
+		return unitValue;
 	}
 
 	public void setValorUnidade(double valorUnidade) {
-		this.valorUnidade = valorUnidade;
+		this.unitValue = valorUnidade;
 	}
 
 	public String getUserId() {
@@ -75,10 +72,10 @@ public abstract class Transaction {
 	}
 
 	public byte[] getAssinatura() {
-		return assinatura;
+		return signature;
 	}
 
 	public void setAssinatura(byte[] assinatura) {
-		this.assinatura = assinatura;
+		this.signature = assinatura;
 	}
 }
