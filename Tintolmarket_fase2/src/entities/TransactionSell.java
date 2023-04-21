@@ -1,11 +1,8 @@
 package entities;
 
-import java.security.PrivateKey;
+public class TransactionSell extends Transaction {
 
-public class TransactionSell extends Transaction{
-
-	public TransactionSell(int transacaoId, int vinhoId, int unidades, double valorUnidade, int userId,
-			byte[] assinatura) {
-		super(transacaoId, vinhoId, unidades, valorUnidade, userId, assinatura);
+	public TransactionSell(String vinhoId, int unidades, double valorUnidade, String userId, byte[] assinatura) {
+		super(vinhoId, unidades, valorUnidade, userId, assinatura);
 	}
 }

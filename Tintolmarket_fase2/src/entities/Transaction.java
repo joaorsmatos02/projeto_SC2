@@ -1,76 +1,52 @@
 package entities;
 
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
-import java.security.SignatureException;
+
+import catalogs.UserCatalog;
 
 public abstract class Transaction {
-	private int transacaoId;
-    private int vinhoId;
-    private int unidades;
-    private double valorUnidade;
-    private int userId;
-    private byte[] assinatura;
 
-    public Transaction(int transacaoId, int vinhoId, int unidades, double valorUnidade, int userId, byte[] assinatura) {
-        this.transacaoId = transacaoId;
-        this.vinhoId = vinhoId;
-        this.unidades = unidades;
-        this.valorUnidade = valorUnidade;
-        this.userId = userId;
-        this.assinatura = assinatura;
-    }
+	private String vinhoId;
+	private int unidades;
+	private double valorUnidade;
+	private String userId;
+	private byte[] assinatura;
 
-    public boolean verificarAssinatura(PublicKey chavePublica) {
-        String m = String.format("%d%d%d%f%d", transacaoId, vinhoId, unidades, valorUnidade, userId);
-
-        try {
-            Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initVerify(chavePublica);
-            signature.update(m.getBytes(StandardCharsets.UTF_8));
-            return signature.verify(assinatura);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-    
-//    public byte[] assinar(PrivateKey privateKey) {
-//        String m = String.format("%d%d%d%.2f%d", transacaoId, vinhoId, unidades, valorUnidade, userId);
-//    	
-//		try {
-//			Signature signature = Signature.getInstance("SHA256withRSA");
-//			signature.initSign(privateKey);
-//			signature.update(m.getBytes(StandardCharsets.UTF_8));
-//			assinatura = signature.sign();
-//		} catch (InvalidKeyException e) {
-//			System.out.println(e.getMessage());
-//		} catch (SignatureException e) {
-//			System.out.println(e.getMessage());
-//		} catch (NoSuchAlgorithmException e) {
-//			System.out.println(e.getMessage());
-//		}
-//		return assinatura;
-//	}
-
-    // Get & Set
-	public int getTransacaoId() {
-		return transacaoId;
+	public Transaction(String vinhoId, int unidades, double valorUnidade, String userId, byte[] assinatura) {
+		this.vinhoId = vinhoId;
+		this.unidades = unidades;
+		this.valorUnidade = valorUnidade;
+		this.userId = userId;
+		this.assinatura = assinatura;
 	}
 
-	public void setTransacaoId(int transacaoId) {
-		this.transacaoId = transacaoId;
+	public boolean verificarAssinatura(PublicKey chavePublica) {
+		String s = String.format("%s%d%.2f%s", vinhoId, unidades, valorUnidade, userId);
+
+		try {
+			Signature signature = Signature.getInstance("SHA256withRSA");
+			signature.initVerify(chavePublica);
+			signature.update(s.getBytes(StandardCharsets.UTF_8));
+			return signature.verify(assinatura);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
-	public int getVinhoId() {
+	public boolean validateTransaction() {
+		return verificarAssinatura(UserCatalog.getInstance().getPublicKey(userId));
+	}
+
+	// Get & Set Acho que nao vamos usar
+
+	public String getVinhoId() {
 		return vinhoId;
 	}
 
-	public void setVinhoId(int vinhoId) {
+	public void setVinhoId(String vinhoId) {
 		this.vinhoId = vinhoId;
 	}
 
@@ -90,11 +66,11 @@ public abstract class Transaction {
 		this.valorUnidade = valorUnidade;
 	}
 
-	public int getUserId() {
+	public String getUserId() {
 		return userId;
 	}
 
-	public void setUserId(int userId) {
+	public void setUserId(String userId) {
 		this.userId = userId;
 	}
 
@@ -104,5 +80,5 @@ public abstract class Transaction {
 
 	public void setAssinatura(byte[] assinatura) {
 		this.assinatura = assinatura;
-	}    
+	}
 }
