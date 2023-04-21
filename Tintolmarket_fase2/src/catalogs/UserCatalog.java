@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.cert.Certificate;
@@ -30,6 +32,7 @@ public class UserCatalog {
 
 	private static UserCatalog instance;
 	private List<User> users;
+	private KeyStore keyStore;
 
 	/**
 	 * Construtor privado da classe UserCatalog.
@@ -62,6 +65,10 @@ public class UserCatalog {
 		return instance;
 	}
 
+	public void setKeyStore(KeyStore ks) {
+		this.keyStore = ks;
+	}
+
 	/**
 	 * Efetua o login do utilizador ou cria um novo utilizador.
 	 * 
@@ -72,7 +79,7 @@ public class UserCatalog {
 	 *         contrario.
 	 * @throws Exception Se ocorrer um erro
 	 */
-	public synchronized String login(ObjectInputStream in, ObjectOutputStream out, KeyStore keyStore) throws Exception {
+	public synchronized String login(ObjectInputStream in, ObjectOutputStream out) throws Exception {
 		File users = new File("txtFiles//userCreds.txt");
 		users.createNewFile();
 		Scanner sc = new Scanner(users);
@@ -207,6 +214,15 @@ public class UserCatalog {
 			fw.close();
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	}
+
+	public PublicKey getPublicKey(String userId) {
+		try {
+			return keyStore.getCertificate(userId + "_key").getPublicKey();
+		} catch (KeyStoreException e) {
+			e.printStackTrace();
+			return null;
 		}
 	}
 
