@@ -20,6 +20,7 @@ import exceptions.WrongCredentialsException;
 import handlers.AddInfoHandler;
 import handlers.ShowInfoHandler;
 import handlers.TransactionHandler;
+import utils.BlockChain;
 
 /**
  * Classe principal do servidor Tintolmarket.
@@ -61,9 +62,10 @@ public class TintolmarketServer {
 			System.out.println("Erro na conexao com cliente");
 		}
 
-		////////////////////////////////////////////////////////////////////////////////
-		//// TODO/////////////verificar integridade/criar blockchain////////////////////
-		////////////////////////////////////////////////////////////////////////////////
+		if (!BlockChain.verifyIntegrity()) {
+			System.out.println("Erro na verificacao da blockchain!");
+			System.exit(0);
+		}
 
 		try {
 
@@ -124,7 +126,8 @@ class ServerThread extends Thread {
 
 			// fazer login do user
 			UserCatalog userCatalog = UserCatalog.getInstance();
-			String name = userCatalog.login(in, out, keyStore);
+			userCatalog.setKeyStore(keyStore);
+			String name = userCatalog.login(in, out);
 			if (name != null) {
 				out.writeBoolean(true);
 				out.flush();
@@ -223,14 +226,14 @@ class ServerThread extends Thread {
 	}
 
 	private static void sell(ObjectInputStream in, ObjectOutputStream out, User user) throws Exception {
-		////////////////////////////////////////////////////////////////////////
-		// TODO verificar assinatura do cliente e escrever na blockchain ///////
-		////////////////////////////////////////////////////////////////////////
-		String arg1 = in.readUTF();
-		double price = Double.parseDouble(in.readUTF());
-		int num = Integer.parseInt(in.readUTF());
-		TransactionHandler.sell(user, arg1, price, num);
-		out.writeUTF(String.format("%d quantidade(s) de vinho %s colocada(s) a venda por %.2f com sucesso!", num, arg1,
+		String wine = in.readUTF();
+		double price = in.readDouble();
+		int qty = in.readInt();
+		String userName = in.readUTF();
+		byte[] signature = (byte[]) in.readObject();
+
+		TransactionHandler.sell(user, wine, price, qty, userName, signature);
+		out.writeUTF(String.format("%d quantidade(s) de vinho %s colocada(s) a venda por %.2f com sucesso!", qty, wine,
 				price));
 	}
 
@@ -277,4 +280,5 @@ class ServerThread extends Thread {
 	private static void read(ObjectOutputStream out, User user) throws Exception {
 		out.writeUTF(ShowInfoHandler.read(user));
 	}
+
 }

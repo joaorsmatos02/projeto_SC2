@@ -5,25 +5,18 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.security.InvalidKeyException;
-import java.security.Key;
 import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.Signature;
-import java.security.SignatureException;
 import java.security.cert.Certificate;
-import java.util.Base64;
 import java.util.Scanner;
 
 import javax.crypto.Cipher;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import entities.TransactionSell;
+import utils.Utils;
 
 /**
  *
@@ -245,32 +238,20 @@ public class Tintolmarket {
 		if (tokens.length != 4) {
 			System.out.println("O comando sell e usado na forma \"sell <wine> <value> <quantity>\"");
 			wait = false;
-		} else { 
-			//////////////////////////////////////////////////////////////////////
-			// TODO//////////////// enviar informacao assinada (4.3) /////////////////
-			/////////////////////////////////////////////////////////////////////////
-			
-			// NAO SEI ONDE E QUE INCREMENTAS O ID
-			int transacaoId = 1;
-			int vinhoId = Integer.parseInt(tokens[1]);
-			int unidades = Integer.parseInt(tokens[3]);
+		} else {
+
+			String vinhoId = tokens[1];
 			double valorUnidade = Double.parseDouble(tokens[2]);
-			int userId = 1;
-	        String m = String.format("%d%d%d%.2f%d", transacaoId, vinhoId, unidades, valorUnidade, userId);
-			
-			// Lado Servidor
-//			TransactionSell ts = new TransactionSell(transacaoId, vinhoId, unidades,
-//					valorUnidade, userId, null);
-//			ts.assinar(privateKey);
-			
+			int unidades = Integer.parseInt(tokens[3]);
+			String s = String.format("%s%d%.2f%s", vinhoId, unidades, valorUnidade, name);
+			byte[] signed = Utils.signString(privateKey, s);
+
 			out.writeUTF("s");
-			out.write(transacaoId);
-			out.write(vinhoId);
+			out.writeUTF(vinhoId);
 			out.writeDouble(valorUnidade);
-			out.write(unidades);
-			out.write(userId);
-			out.writeInt(assinar(privateKey, m).length);
-			out.write(assinar(privateKey, m));
+			out.writeInt(unidades);
+			out.writeUTF(name);
+			out.writeObject(signed);
 		}
 		return wait;
 	}
@@ -293,12 +274,11 @@ public class Tintolmarket {
 		if (tokens.length != 4) {
 			System.out.println("O comando buy e usado na forma \"buy <wine> <seller> <quantity>\"");
 			wait = false;
-		} else { 
+		} else {
 			//////////////////////////////////////////////////////////////////////
 			// TODO////////////////// enviar informacao assinada (4.3) ///////////////
 			/////////////////////////////////////////////////////////////////////////
-			
-			
+
 			out.writeUTF("b");
 			out.writeUTF(tokens[1]);
 			out.writeUTF(tokens[2]);
@@ -341,7 +321,7 @@ public class Tintolmarket {
 			for (int i = 2; i < tokens.length; i++)
 				sb.append(tokens[i] + " ");
 			Certificate dest = trustStore.getCertificate("newcert_" + tokens[1]);
-			String cypheredMessage = cipher(Cipher.ENCRYPT_MODE, dest.getPublicKey(), sb.toString());
+			String cypheredMessage = Utils.cipher(Cipher.ENCRYPT_MODE, dest.getPublicKey(), sb.toString());
 			out.writeUTF("t");
 			out.writeUTF(tokens[1]);
 			out.writeUTF(cypheredMessage);
@@ -362,7 +342,7 @@ public class Tintolmarket {
 				s = s.substring(s.indexOf("[") + 1, s.length() - 3);
 				String[] msgs = s.split(", ");
 				for (String msg : msgs)
-					recieved = recieved.replace(msg, cipher(Cipher.DECRYPT_MODE, key, msg));
+					recieved = recieved.replace(msg, Utils.cipher(Cipher.DECRYPT_MODE, key, msg));
 			}
 			System.out.println(recieved);
 		}
@@ -381,33 +361,4 @@ public class Tintolmarket {
 		file.close();
 	}
 
-	private static String cipher(int mode, Key key, String data) throws Exception {
-		Cipher cipher = Cipher.getInstance("RSA");
-		if (mode == Cipher.DECRYPT_MODE) {
-			cipher.init(Cipher.DECRYPT_MODE, (PrivateKey) key);
-			byte[] decryptedData = cipher.doFinal(Base64.getDecoder().decode(data));
-			return new String(decryptedData, StandardCharsets.UTF_8);
-		} else {
-			cipher.init(Cipher.ENCRYPT_MODE, (PublicKey) key);
-			byte[] encryptedData = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
-			return Base64.getEncoder().encodeToString(encryptedData);
-		}
-	}
-	
-	public static byte[] assinar(PrivateKey privateKey, String m) {
-		byte[] assinatura = null;
-		try {
-			Signature signature = Signature.getInstance("SHA256withRSA");
-			signature.initSign(privateKey);
-			signature.update(m.getBytes(StandardCharsets.UTF_8));
-			assinatura = signature.sign();
-		} catch (InvalidKeyException e) {
-			System.out.println(e.getMessage());
-		} catch (SignatureException e) {
-			System.out.println(e.getMessage());
-		} catch (NoSuchAlgorithmException e) {
-			System.out.println(e.getMessage());
-		}
-		return assinatura;
-	}
 }
