@@ -2,7 +2,15 @@ package utils;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.util.Base64;
 import java.util.Scanner;
+
+import javax.crypto.Cipher;
 
 /**
  * Classe Utils que fornece metodos uteis para manipular arquivos e outros
@@ -39,6 +47,31 @@ public class Utils {
 			newFile.renameTo(file);
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	public static byte[] signString(PrivateKey privateKey, String m) {
+		try {
+			Signature signature = Signature.getInstance("SHA256withRSA");
+			signature.initSign(privateKey);
+			signature.update(m.getBytes(StandardCharsets.UTF_8));
+			return signature.sign();
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		return null;
+	}
+
+	public static String cipher(int mode, Key key, String data) throws Exception {
+		Cipher cipher = Cipher.getInstance("RSA");
+		if (mode == Cipher.DECRYPT_MODE) {
+			cipher.init(Cipher.DECRYPT_MODE, (PrivateKey) key);
+			byte[] decryptedData = cipher.doFinal(Base64.getDecoder().decode(data));
+			return new String(decryptedData, StandardCharsets.UTF_8);
+		} else {
+			cipher.init(Cipher.ENCRYPT_MODE, (PublicKey) key);
+			byte[] encryptedData = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
+			return Base64.getEncoder().encodeToString(encryptedData);
 		}
 	}
 
