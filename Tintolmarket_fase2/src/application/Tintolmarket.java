@@ -175,6 +175,8 @@ public class Tintolmarket {
 				wait = talk(out, trustStore, tokens);
 			} else if (tokens[0].equals("r") || tokens[0].equals("read")) {
 				wait = read(out, in, key, tokens);
+			} else if (tokens[0].equals("l") || tokens[0].equals("list")) {
+				wait = list(out, tokens);
 			} else if (tokens[0].equals("exit")) {
 				System.out.println("Programa encerrado.");
 				out.writeUTF("exit");
@@ -347,6 +349,17 @@ public class Tintolmarket {
 			System.out.println(recieved);
 		}
 		return false;
+	}
+
+	private static boolean list(ObjectOutputStream out, String[] tokens) throws Exception {
+		boolean wait = true;
+		if (tokens.length != 1) {
+			System.out.println("O comando list e usado na forma \"list\"");
+			wait = false;
+		} else {
+			out.writeUTF("l");
+		}
+		return wait;
 	}
 
 	private static void getImage(ObjectInputStream in) throws Exception {

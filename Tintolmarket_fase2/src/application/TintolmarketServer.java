@@ -103,9 +103,6 @@ class ServerThread extends Thread {
 	private SSLSocket socket;
 	private KeyStore keyStore;
 	private String filePassword;
-	/////////////////////////////////////////////////////////
-	// TODO Adicionar contador de blocos na blockchain?? ////
-	/////////////////////////////////////////////////////////
 
 	public ServerThread(SSLSocket inSoc, KeyStore keyStore, String filePassword) {
 		this.socket = inSoc;
@@ -195,6 +192,8 @@ class ServerThread extends Thread {
 				case "r":
 					read(out, user);
 					break;
+				case "l":
+					list(out);
 				default:
 					exit = true;
 					break;
@@ -279,6 +278,10 @@ class ServerThread extends Thread {
 
 	private static void read(ObjectOutputStream out, User user) throws Exception {
 		out.writeUTF(ShowInfoHandler.read(user));
+	}
+
+	private void list(ObjectOutputStream out) throws Exception {
+		out.writeUTF(BlockChain.listAllTransactions());
 	}
 
 }
