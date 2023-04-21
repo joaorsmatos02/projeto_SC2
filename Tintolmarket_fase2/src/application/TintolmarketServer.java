@@ -277,5 +277,4 @@ class ServerThread extends Thread {
 	private static void read(ObjectOutputStream out, User user) throws Exception {
 		out.writeUTF(ShowInfoHandler.read(user));
 	}
-
 }

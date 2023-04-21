@@ -7,11 +7,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
+import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.util.Base64;
 import java.util.Scanner;
@@ -19,6 +22,8 @@ import java.util.Scanner;
 import javax.crypto.Cipher;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+
+import entities.TransactionSell;
 
 /**
  *
@@ -163,7 +168,7 @@ public class Tintolmarket {
 			if (tokens[0].equals("a") || tokens[0].equals("add")) {
 				wait = add(out, tokens);
 			} else if (tokens[0].equals("s") || tokens[0].equals("sell")) {
-				wait = sell(out, tokens);
+				wait = sell(out, tokens, key);
 			} else if (tokens[0].equals("v") || tokens[0].equals("view")) {
 				wait = view(out, tokens);
 				image = in.readBoolean();
@@ -235,18 +240,37 @@ public class Tintolmarket {
 		return wait;
 	}
 
-	private static boolean sell(ObjectOutputStream out, String[] tokens) throws Exception {
+	private static boolean sell(ObjectOutputStream out, String[] tokens, PrivateKey privateKey) throws Exception {
 		boolean wait = true;
 		if (tokens.length != 4) {
 			System.out.println("O comando sell e usado na forma \"sell <wine> <value> <quantity>\"");
 			wait = false;
-		} else { //////////////////////////////////////////////////////////////////////
+		} else { 
+			//////////////////////////////////////////////////////////////////////
 			// TODO//////////////// enviar informacao assinada (4.3) /////////////////
 			/////////////////////////////////////////////////////////////////////////
+			
+			// NAO SEI ONDE E QUE INCREMENTAS O ID
+			int transacaoId = 1;
+			int vinhoId = Integer.parseInt(tokens[1]);
+			int unidades = Integer.parseInt(tokens[3]);
+			double valorUnidade = Double.parseDouble(tokens[2]);
+			int userId = 1;
+	        String m = String.format("%d%d%d%.2f%d", transacaoId, vinhoId, unidades, valorUnidade, userId);
+			
+			// Lado Servidor
+//			TransactionSell ts = new TransactionSell(transacaoId, vinhoId, unidades,
+//					valorUnidade, userId, null);
+//			ts.assinar(privateKey);
+			
 			out.writeUTF("s");
-			out.writeUTF(tokens[1]);
-			out.writeUTF(tokens[2]);
-			out.writeUTF(tokens[3]);
+			out.write(transacaoId);
+			out.write(vinhoId);
+			out.writeDouble(valorUnidade);
+			out.write(unidades);
+			out.write(userId);
+			out.writeInt(assinar(privateKey, m).length);
+			out.write(assinar(privateKey, m));
 		}
 		return wait;
 	}
@@ -269,9 +293,12 @@ public class Tintolmarket {
 		if (tokens.length != 4) {
 			System.out.println("O comando buy e usado na forma \"buy <wine> <seller> <quantity>\"");
 			wait = false;
-		} else { //////////////////////////////////////////////////////////////////////
+		} else { 
+			//////////////////////////////////////////////////////////////////////
 			// TODO////////////////// enviar informacao assinada (4.3) ///////////////
 			/////////////////////////////////////////////////////////////////////////
+			
+			
 			out.writeUTF("b");
 			out.writeUTF(tokens[1]);
 			out.writeUTF(tokens[2]);
@@ -365,5 +392,22 @@ public class Tintolmarket {
 			byte[] encryptedData = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
 			return Base64.getEncoder().encodeToString(encryptedData);
 		}
+	}
+	
+	public static byte[] assinar(PrivateKey privateKey, String m) {
+		byte[] assinatura = null;
+		try {
+			Signature signature = Signature.getInstance("SHA256withRSA");
+			signature.initSign(privateKey);
+			signature.update(m.getBytes(StandardCharsets.UTF_8));
+			assinatura = signature.sign();
+		} catch (InvalidKeyException e) {
+			System.out.println(e.getMessage());
+		} catch (SignatureException e) {
+			System.out.println(e.getMessage());
+		} catch (NoSuchAlgorithmException e) {
+			System.out.println(e.getMessage());
+		}
+		return assinatura;
 	}
 }
