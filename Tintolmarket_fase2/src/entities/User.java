@@ -1,7 +1,10 @@
 package entities;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +43,7 @@ public class User {
 
 	/**
 	 * 
-	 * Obtém o nome do utilizador.
+	 * Obtem o nome do utilizador.
 	 * 
 	 * @return O nome do utilizador.
 	 */
@@ -64,6 +67,13 @@ public class User {
 	 */
 	public double getBalance() {
 		return this.balance;
+	}
+
+	public Certificate getCertificate() throws Exception {
+		CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
+		FileInputStream fis = new FileInputStream("stores//server//keyRSApub_" + name + ".cer");
+		return certificateFactory.generateCertificate(fis);
+
 	}
 
 	/**

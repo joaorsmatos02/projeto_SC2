@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
@@ -152,8 +151,6 @@ public class UserCatalog {
 			fw.write("-----END CERTIFICATE-----\n");
 			fw.close();
 
-			keyStore.setCertificateEntry("newcert_" + user, cert);
-
 			this.addUser(user);
 			fw = new FileWriter("txtFiles//userCreds.txt", true);
 			fw.write(user + ":" + certFile.getName() + "\n");
@@ -213,11 +210,11 @@ public class UserCatalog {
 
 	public PublicKey getPublicKey(String userId) {
 		try {
-			return keyStore.getCertificate(userId + "_key").getPublicKey();
-		} catch (KeyStoreException e) {
+			return getUserByName(userId).getCertificate().getPublicKey();
+		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
 		}
+		return null;
 	}
 
 	/**

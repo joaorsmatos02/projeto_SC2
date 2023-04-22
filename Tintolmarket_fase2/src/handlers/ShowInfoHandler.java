@@ -1,5 +1,6 @@
 package handlers;
 
+import catalogs.BlockChain;
 import catalogs.WineCatalog;
 import entities.User;
 import entities.Wine;
@@ -48,5 +49,9 @@ public class ShowInfoHandler {
 			return "Nao tem mensagens";
 		user.deleteMessages();
 		return inbox;
+	}
+
+	public static String list(BlockChain blockChain) {
+		return blockChain.listAllTransactions();
 	}
 }

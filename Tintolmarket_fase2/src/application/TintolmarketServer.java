@@ -65,14 +65,6 @@ public class TintolmarketServer {
 			System.out.println("Erro na conexao com cliente");
 		}
 
-		BlockChain blockChain = null;
-		try {
-			blockChain = BlockChain.getInstance();
-		} catch (BlockChainException e) {
-			System.out.println(e.getMessage());
-			System.exit(0);
-		}
-
 		try {
 
 			File file = new File(keyStorePath);
@@ -80,9 +72,18 @@ public class TintolmarketServer {
 			KeyStore keyStore = KeyStore.getInstance("JCEKS");
 			keyStore.load(is, passwordKeystore.toCharArray());
 
-			Certificate serverCert = keyStore.getCertificate("server_key");
-			PrivateKey pvk = (PrivateKey) keyStore.getKey("server_key", passwordKeystore.toCharArray());
-			blockChain.setKey(serverCert.getPublicKey(), pvk);
+			BlockChain blockChain = null;
+			try {
+				blockChain = BlockChain.getInstance();
+				blockChain.setKey(null, null);
+				Certificate serverCert = keyStore.getCertificate("server_key");
+				PrivateKey pvk = (PrivateKey) keyStore.getKey("server_key", passwordKeystore.toCharArray());
+				blockChain.setKey(serverCert.getPublicKey(), pvk);
+				blockChain.verifyIntegrity();
+			} catch (BlockChainException e) {
+				System.out.println(e.getMessage());
+				System.exit(0);
+			}
 
 			while (true) {
 				SSLSocket socket = (SSLSocket) serverSocket.accept();
@@ -293,7 +294,7 @@ class ServerThread extends Thread {
 	}
 
 	private void list(ObjectOutputStream out) throws Exception {
-		out.writeUTF(blockChain.listAllTransactions());
+		out.writeUTF(ShowInfoHandler.list(blockChain));
 	}
 
 }

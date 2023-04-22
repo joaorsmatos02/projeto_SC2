@@ -19,7 +19,6 @@ public class BlockChain {
 
 	private BlockChain() throws BlockChainException {
 		this.blocks = new ArrayList<>();
-		verifyIntegrity();
 	}
 
 	public static BlockChain getInstance() throws BlockChainException {
@@ -33,7 +32,7 @@ public class BlockChain {
 		this.serverPrivateKey = pvk;
 	}
 
-	private void verifyIntegrity() throws BlockChainException {
+	public void verifyIntegrity() throws BlockChainException {
 		try {
 			File folder = new File("blockChain");
 			if (!folder.exists())
@@ -42,19 +41,27 @@ public class BlockChain {
 			int blockNum = 1;
 			File blockFile = new File("blockChain//block_1.blk");
 			if (!blockFile.exists()) {
-				blockFile.createNewFile();
-				Block a = new Block(blockFile, 1, new byte[32]);
+				Block a = new Block(1, new byte[32]);
 				blocks.add(a);
 			} else {
 				Block block = Block.readFromFile(blockFile);
-				blocks.add(block);
-				while (block.isValid(serverPublicKey) && block.isFull()) {
-					block = Block.readFromFile(new File("blockChain//block_" + blockNum + ".blk"));
-					blockNum++;
-				}
-				if (!block.isValid(serverPublicKey))
+				Block block2 = Block.readFromFile(new File("blockChain//block_2.blk"));
+				// Block block3 = Block.readFromFile(new File("blockChain//block_3.blk"));
+				if (block.isValid(serverPublicKey))
+					blocks.add(block);
+				else
 					throw new BlockChainException("Erro ao recriar blockchain");
+
+				while (block.isFull()) {
+					blockNum++;
+					block = Block.readFromFile(new File("blockChain//block_" + blockNum + ".blk"));
+					if (block.isValid(serverPublicKey))
+						blocks.add(block);
+					else
+						throw new BlockChainException("Erro ao recriar blockchain");
+				}
 			}
+
 		} catch (BlockChainException e) {
 			throw e;
 		} catch (Exception e) {
@@ -67,8 +74,7 @@ public class BlockChain {
 		last.add(ts);
 		if (last.isFull()) {
 			signBlock(last);
-			File newBlockFile = new File("blockChain//block_" + (blocks.size() + 1) + ".blk");
-			Block newBlock = new Block(newBlockFile, blocks.size() + 1, last.generate32ByteHash());
+			Block newBlock = new Block(blocks.size() + 1, last.generate32ByteHash());
 			blocks.add(newBlock);
 		}
 	}

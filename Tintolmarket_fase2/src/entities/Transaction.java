@@ -1,12 +1,15 @@
 package entities;
 
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
-import java.security.Signature;
 
 import catalogs.UserCatalog;
+import utils.Utils;
 
-public class Transaction {
+public class Transaction implements Serializable {
+
+	private static final long serialVersionUID = 6072210053516028044L;
 
 	private String wineId;
 	private int units;
@@ -25,20 +28,11 @@ public class Transaction {
 	public boolean validateTransaction() {
 		PublicKey key = UserCatalog.getInstance().getPublicKey(userId);
 		String f = String.format("%s%d%.2f%s", wineId, units, unitValue, userId);
-
-		try {
-			Signature s = Signature.getInstance("SHA256withRSA");
-			s.initVerify(key);
-			s.update(f.getBytes(StandardCharsets.UTF_8));
-			return s.verify(signature);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
+		return Utils.verifySignature(key, f.getBytes(StandardCharsets.UTF_8), signature);
 	}
 
 	public String toString() {
-		return wineId + "\r\n" + units + "\r\n" + unitValue + "\r\n" + userId + "\r\n" + signature + "\r\n";
+		return wineId + "\r\n" + units + "\r\n" + unitValue + "\r\n" + userId + "\r\n";
 	}
 
 	// Get & Set Acho que nao vamos usar
