@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.crypto.SecretKey;
+
 import entities.Wine;
 import exceptions.RepeatedWineException;
 
@@ -20,6 +22,7 @@ public class WineCatalog {
 
 	private List<Wine> wines;
 	private static WineCatalog instance;
+	private static SecretKey fileKey;
 
 	/**
 	 * Construtor privado da classe WineCatalog.
@@ -50,6 +53,10 @@ public class WineCatalog {
 			instance = new WineCatalog();
 		}
 		return instance;
+	}
+
+	public static void setSecretKey(SecretKey sk) {
+		fileKey = sk;
 	}
 
 	/**

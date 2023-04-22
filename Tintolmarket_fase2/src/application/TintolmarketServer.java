@@ -9,14 +9,19 @@ import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.PrivateKey;
+import java.security.SecureRandom;
 import java.security.cert.Certificate;
 
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 
 import catalogs.BlockChain;
 import catalogs.UserCatalog;
+import catalogs.WineAdCatalog;
+import catalogs.WineCatalog;
 import entities.User;
 import exceptions.BlockChainException;
 import exceptions.WineNotFoundException;
@@ -85,9 +90,19 @@ public class TintolmarketServer {
 				System.exit(0);
 			}
 
+			SecretKey fileKey = generateKey(filePassword);
+
+			UserCatalog.setSecretKey(fileKey);
+			UserCatalog.setKeyStore(keyStore);
+			UserCatalog.getInstance();
+			WineCatalog.setSecretKey(fileKey);
+			WineCatalog.getInstance();
+			WineAdCatalog.setSecretKey(fileKey);
+			WineAdCatalog.getInstance();
+
 			while (true) {
 				SSLSocket socket = (SSLSocket) serverSocket.accept();
-				ServerThread st = new ServerThread(socket, keyStore, blockChain, filePassword);
+				ServerThread st = new ServerThread(socket, blockChain);
 				st.start();
 			}
 		} catch (Exception e) {
@@ -102,6 +117,12 @@ public class TintolmarketServer {
 		}
 	}
 
+	private static SecretKey generateKey(String password) throws Exception {
+		KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+		keyGenerator.init(256, new SecureRandom(password.getBytes()));
+		return keyGenerator.generateKey();
+	}
+
 }
 
 /**
@@ -112,15 +133,11 @@ public class TintolmarketServer {
 class ServerThread extends Thread {
 
 	private SSLSocket socket;
-	private KeyStore keyStore;
 	private BlockChain blockChain;
-	private String filePassword;
 
-	public ServerThread(SSLSocket inSoc, KeyStore keyStore, BlockChain blockChain, String filePassword) {
+	public ServerThread(SSLSocket inSoc, BlockChain blockChain) {
 		this.socket = inSoc;
-		this.keyStore = keyStore;
 		this.blockChain = blockChain;
-		this.filePassword = filePassword;
 	}
 
 	public void run() {
@@ -136,7 +153,6 @@ class ServerThread extends Thread {
 
 			// fazer login do user
 			UserCatalog userCatalog = UserCatalog.getInstance();
-			userCatalog.setKeyStore(keyStore);
 			String name = userCatalog.login(in, out);
 			if (name != null) {
 				out.writeBoolean(true);
@@ -249,7 +265,6 @@ class ServerThread extends Thread {
 		byte[] signature = (byte[]) in.readObject();
 
 		TransactionHandler.sell(user, wine, price, qty, signature);
-		out.writeBoolean(true);
 		out.writeUTF(String.format("%d quantidade(s) de vinho %s colocada(s) a venda por %.2f com sucesso!", qty, wine,
 				price));
 	}

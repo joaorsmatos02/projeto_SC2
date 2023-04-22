@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.crypto.SecretKey;
+
 import entities.User;
 import entities.Wine;
 import entities.WineAd;
@@ -22,6 +24,7 @@ public class WineAdCatalog {
 
 	private static WineAdCatalog instance;
 	private List<WineAd> wineAds;
+	private static SecretKey fileKey;
 
 	/**
 	 * Construtor privado da classe WineAdCatalog.
@@ -52,6 +55,10 @@ public class WineAdCatalog {
 			instance = new WineAdCatalog();
 		}
 		return instance;
+	}
+
+	public static void setSecretKey(SecretKey sk) {
+		fileKey = sk;
 	}
 
 	/**

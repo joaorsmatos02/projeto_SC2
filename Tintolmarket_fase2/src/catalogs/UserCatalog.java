@@ -3,7 +3,6 @@ package catalogs;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.security.KeyStore;
@@ -18,6 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.crypto.SecretKey;
+
 import entities.User;
 import exceptions.WrongCredentialsException;
 import utils.Utils;
@@ -30,8 +31,10 @@ import utils.Utils;
 public class UserCatalog {
 
 	private static UserCatalog instance;
+	private File userInfo;
 	private List<User> users;
-	private KeyStore keyStore;
+	private static KeyStore keyStore;
+	private static SecretKey fileKey;
 
 	/**
 	 * Construtor privado da classe UserCatalog.
@@ -39,14 +42,14 @@ public class UserCatalog {
 	private UserCatalog() {
 		users = new ArrayList<>();
 		File txtFolder = new File("txtFiles");
-		File userInfo = new File("txtFiles//userCatalog.txt");
+		userInfo = new File("txtFiles//userCatalog.txt");
 		try {
 			if (!txtFolder.exists())
 				txtFolder.mkdir();
 			if (!userInfo.exists())
 				userInfo.createNewFile();
 			else
-				getUsersByTextFile(userInfo);
+				getUsersByTextFile();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -64,8 +67,12 @@ public class UserCatalog {
 		return instance;
 	}
 
-	public void setKeyStore(KeyStore ks) {
-		this.keyStore = ks;
+	public static void setKeyStore(KeyStore ks) {
+		keyStore = ks;
+	}
+
+	public static void setSecretKey(SecretKey sk) {
+		fileKey = sk;
 	}
 
 	/**
@@ -164,7 +171,7 @@ public class UserCatalog {
 	 * 
 	 * @param userInfo O arquivo de texto com as informacoes dos utilizadores.
 	 */
-	private void getUsersByTextFile(File userInfo) {
+	private void getUsersByTextFile() {
 		try {
 			Scanner sc = new Scanner(userInfo);
 			while (sc.hasNextLine()) {
@@ -203,7 +210,7 @@ public class UserCatalog {
 			FileWriter fw = new FileWriter(userInfo, true);
 			fw.write(u.toString() + "\r\n");
 			fw.close();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

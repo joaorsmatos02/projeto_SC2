@@ -56,18 +56,9 @@ public class Utils {
 	 * @param pk    a chave a usar na assinatura
 	 * @param nonce o nonce a assinar
 	 * @return um byte[] com o nonce assinado
-	 * @throws Exception se ocorrer algum erro durante a assinatura
 	 */
 	public static byte[] signString(PrivateKey privateKey, String nonce) {
-		try {
-			Signature signature = Signature.getInstance("SHA256withRSA");
-			signature.initSign(privateKey);
-			signature.update(nonce.getBytes(StandardCharsets.UTF_8));
-			return signature.sign();
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-		return null;
+		return signByteArray(privateKey, nonce.getBytes(StandardCharsets.UTF_8));
 	}
 
 	/**
@@ -76,7 +67,6 @@ public class Utils {
 	 * @param pk    a chave a usar na assinatura
 	 * @param nonce o nonce a assinar
 	 * @return um byte[] com o nonce assinado
-	 * @throws Exception se ocorrer algum erro durante a assinatura
 	 */
 	public static byte[] signByteArray(PrivateKey pk, byte[] nonce) {
 		try {
