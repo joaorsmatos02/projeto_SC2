@@ -34,7 +34,7 @@ public class TransactionHandler {
 			throws Exception {
 		Wine w = WineCatalog.getInstance().getWineByName(wine);
 		if (w != null) {
-			Transaction ts = new Transaction(wine, quantity, price, userName, signature);
+			Transaction ts = new Transaction(false, wine, quantity, price, userName, signature);
 			if (user.getName().equals(userName) && ts.validateTransaction()) {
 				user.createWineAd(w, price, quantity);
 				BlockChain.getInstance().addTransaction(ts);

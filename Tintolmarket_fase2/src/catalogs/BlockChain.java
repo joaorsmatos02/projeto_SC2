@@ -45,8 +45,6 @@ public class BlockChain {
 				blocks.add(a);
 			} else {
 				Block block = Block.readFromFile(blockFile);
-				Block block2 = Block.readFromFile(new File("blockChain//block_2.blk"));
-				// Block block3 = Block.readFromFile(new File("blockChain//block_3.blk"));
 				if (block.isValid(serverPublicKey))
 					blocks.add(block);
 				else
@@ -88,7 +86,7 @@ public class BlockChain {
 	public String listAllTransactions() {
 		String result = "";
 		for (Block b : blocks)
-			result += b.toString() + "\r\n";
+			result += b.toString();
 		return result;
 	}
 

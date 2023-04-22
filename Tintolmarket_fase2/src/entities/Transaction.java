@@ -11,13 +11,19 @@ public class Transaction implements Serializable {
 
 	private static final long serialVersionUID = 6072210053516028044L;
 
+	/**
+	 * false indica uma operacao sell e true indica buy
+	 */
+	private boolean type;
 	private String wineId;
 	private int units;
 	private double unitValue;
 	private String userId;
 	private byte[] signature;
 
-	public Transaction(String vinhoId, int unidades, double valorUnidade, String userId, byte[] assinatura) {
+	public Transaction(boolean type, String vinhoId, int unidades, double valorUnidade, String userId,
+			byte[] assinatura) {
+		this.type = type;
 		this.wineId = vinhoId;
 		this.units = unidades;
 		this.unitValue = valorUnidade;
@@ -32,7 +38,13 @@ public class Transaction implements Serializable {
 	}
 
 	public String toString() {
-		return wineId + "\r\n" + units + "\r\n" + unitValue + "\r\n" + userId + "\r\n";
+		String s = null;
+		if (type)
+			s = "buy";
+		else
+			s = "sell";
+		return "Operacao do tipo " + s + "\r\nVinho: " + wineId + "\r\nQuantidade: " + units + "\r\nValor: " + unitValue
+				+ "\r\nUtilizador: " + userId + "\r\n";
 	}
 
 	// Get & Set Acho que nao vamos usar

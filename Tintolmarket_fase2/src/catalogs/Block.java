@@ -139,7 +139,10 @@ public class Block implements Serializable {
 	public String toString() {
 		String result = "";
 		for (Transaction t : transactions)
-			result += t.toString() + "\r\n";
+			if (t != null)
+				result += t.toString() + "\r\n";
+			else
+				break;
 		return result;
 	}
 

@@ -207,6 +207,7 @@ class ServerThread extends Thread {
 					break;
 				case "l":
 					list(out);
+					break;
 				default:
 					exit = true;
 					break;
