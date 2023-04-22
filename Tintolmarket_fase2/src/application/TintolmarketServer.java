@@ -8,19 +8,22 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 
+import catalogs.BlockChain;
 import catalogs.UserCatalog;
 import entities.User;
+import exceptions.BlockChainException;
 import exceptions.WineNotFoundException;
 import exceptions.WrongCredentialsException;
 import handlers.AddInfoHandler;
 import handlers.ShowInfoHandler;
 import handlers.TransactionHandler;
-import utils.BlockChain;
 
 /**
  * Classe principal do servidor Tintolmarket.
@@ -62,8 +65,11 @@ public class TintolmarketServer {
 			System.out.println("Erro na conexao com cliente");
 		}
 
-		if (!BlockChain.verifyIntegrity()) {
-			System.out.println("Erro na verificacao da blockchain!");
+		BlockChain blockChain = null;
+		try {
+			blockChain = BlockChain.getInstance();
+		} catch (BlockChainException e) {
+			System.out.println(e.getMessage());
 			System.exit(0);
 		}
 
@@ -74,9 +80,13 @@ public class TintolmarketServer {
 			KeyStore keyStore = KeyStore.getInstance("JCEKS");
 			keyStore.load(is, passwordKeystore.toCharArray());
 
+			Certificate serverCert = keyStore.getCertificate("server_key");
+			PrivateKey pvk = (PrivateKey) keyStore.getKey("server_key", passwordKeystore.toCharArray());
+			blockChain.setKey(serverCert.getPublicKey(), pvk);
+
 			while (true) {
 				SSLSocket socket = (SSLSocket) serverSocket.accept();
-				ServerThread st = new ServerThread(socket, keyStore, filePassword);
+				ServerThread st = new ServerThread(socket, keyStore, blockChain, filePassword);
 				st.start();
 			}
 		} catch (Exception e) {
@@ -102,11 +112,13 @@ class ServerThread extends Thread {
 
 	private SSLSocket socket;
 	private KeyStore keyStore;
+	private BlockChain blockChain;
 	private String filePassword;
 
-	public ServerThread(SSLSocket inSoc, KeyStore keyStore, String filePassword) {
+	public ServerThread(SSLSocket inSoc, KeyStore keyStore, BlockChain blockChain, String filePassword) {
 		this.socket = inSoc;
 		this.keyStore = keyStore;
+		this.blockChain = blockChain;
 		this.filePassword = filePassword;
 	}
 
@@ -281,7 +293,7 @@ class ServerThread extends Thread {
 	}
 
 	private void list(ObjectOutputStream out) throws Exception {
-		out.writeUTF(BlockChain.listAllTransactions());
+		out.writeUTF(blockChain.listAllTransactions());
 	}
 
 }

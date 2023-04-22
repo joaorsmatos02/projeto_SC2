@@ -2,10 +2,11 @@ package handlers;
 
 import java.util.List;
 
+import catalogs.BlockChain;
 import catalogs.UserCatalog;
 import catalogs.WineAdCatalog;
 import catalogs.WineCatalog;
-import entities.TransactionSell;
+import entities.Transaction;
 import entities.User;
 import entities.Wine;
 import entities.WineAd;
@@ -13,7 +14,6 @@ import exceptions.NotEnoughBalanceException;
 import exceptions.NotEnoughStockException;
 import exceptions.UserNotFoundException;
 import exceptions.WineNotFoundException;
-import utils.BlockChain;
 
 /**
  * A classe TransactionHandler e responsavel por tratar das operacoes de compra
@@ -28,16 +28,16 @@ public class TransactionHandler {
 	 * @param wine     O nome do vinho a ser vendido.
 	 * @param price    O preco unitario do vinho.
 	 * @param quantity A quantidade disponivel para venda.
-	 * @throws WineNotFoundException Se o vinho nao for encontrado.
+	 * @throws Exception
 	 */
 	public static void sell(User user, String wine, double price, int quantity, String userName, byte[] signature)
-			throws WineNotFoundException {
+			throws Exception {
 		Wine w = WineCatalog.getInstance().getWineByName(wine);
 		if (w != null) {
-			TransactionSell ts = new TransactionSell(wine, quantity, price, userName, signature);
-			if (user.getName().equals("userName") && ts.validateTransaction()) {
+			Transaction ts = new Transaction(wine, quantity, price, userName, signature);
+			if (user.getName().equals(userName) && ts.validateTransaction()) {
 				user.createWineAd(w, price, quantity);
-				BlockChain.addTransaction(ts);
+				BlockChain.getInstance().addTransaction(ts);
 			}
 		} else
 			throw new WineNotFoundException("O vinho nao existe");

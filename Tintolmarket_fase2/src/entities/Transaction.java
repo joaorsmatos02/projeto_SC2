@@ -6,16 +6,16 @@ import java.security.Signature;
 
 import catalogs.UserCatalog;
 
-public abstract class Transaction {
+public class Transaction {
 
-	private String wineID;
+	private String wineId;
 	private int units;
 	private double unitValue;
 	private String userId;
 	private byte[] signature;
 
 	public Transaction(String vinhoId, int unidades, double valorUnidade, String userId, byte[] assinatura) {
-		this.wineID = vinhoId;
+		this.wineId = vinhoId;
 		this.units = unidades;
 		this.unitValue = valorUnidade;
 		this.userId = userId;
@@ -24,7 +24,7 @@ public abstract class Transaction {
 
 	public boolean validateTransaction() {
 		PublicKey key = UserCatalog.getInstance().getPublicKey(userId);
-		String f = String.format("%s%d%.2f%s", wineID, units, unitValue, userId);
+		String f = String.format("%s%d%.2f%s", wineId, units, unitValue, userId);
 
 		try {
 			Signature s = Signature.getInstance("SHA256withRSA");
@@ -37,14 +37,18 @@ public abstract class Transaction {
 		}
 	}
 
+	public String toString() {
+		return wineId + "\r\n" + units + "\r\n" + unitValue + "\r\n" + userId + "\r\n" + signature + "\r\n";
+	}
+
 	// Get & Set Acho que nao vamos usar
 
 	public String getVinhoId() {
-		return wineID;
+		return wineId;
 	}
 
 	public void setVinhoId(String vinhoId) {
-		this.wineID = vinhoId;
+		this.wineId = vinhoId;
 	}
 
 	public int getUnidades() {
