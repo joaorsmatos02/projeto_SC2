@@ -30,12 +30,11 @@ public class TransactionHandler {
 	 * @param quantity A quantidade disponivel para venda.
 	 * @throws Exception
 	 */
-	public static void sell(User user, String wine, double price, int quantity, String userName, byte[] signature)
-			throws Exception {
+	public static void sell(User user, String wine, double price, int quantity, byte[] signature) throws Exception {
 		Wine w = WineCatalog.getInstance().getWineByName(wine);
 		if (w != null) {
-			Transaction ts = new Transaction(false, wine, quantity, price, userName, signature);
-			if (user.getName().equals(userName) && ts.validateTransaction()) {
+			Transaction ts = new Transaction(false, wine, quantity, price, user.getName(), signature);
+			if (ts.validateSellTransaction()) {
 				user.createWineAd(w, price, quantity);
 				BlockChain.getInstance().addTransaction(ts);
 			}
@@ -46,16 +45,17 @@ public class TransactionHandler {
 	/**
 	 * Realiza a compra de um vinho de um vendedor.
 	 * 
-	 * @param buyer    O utilizador que deseja comprar o vinho.
-	 * @param wineName O nome do vinho a ser comprado.
-	 * @param seller   O nome do utilizador vendedor.
-	 * @param quantity A quantidade desejada para compra.
+	 * @param buyer     O utilizador que deseja comprar o vinho.
+	 * @param wineName  O nome do vinho a ser comprado.
+	 * @param seller    O nome do utilizador vendedor.
+	 * @param quantity  A quantidade desejada para compra.
+	 * @param signature A assinatura do clientes
 	 * @throws NotEnoughStockException   Se nao houver stock suficiente.
 	 * @throws UserNotFoundException     Se o utilizador nao for encontrado.
 	 * @throws WineNotFoundException     Se o vinho nao for encontrado.
 	 * @throws NotEnoughBalanceException Se nao tiver saldo suficiente.
 	 */
-	public static void buy(User buyer, String wineName, String seller, int quantity)
+	public static void buy(User buyer, String wineName, String seller, int quantity, byte[] signature)
 			throws NotEnoughStockException, UserNotFoundException, WineNotFoundException, NotEnoughBalanceException {
 		double balance = buyer.getBalance();
 
@@ -85,12 +85,23 @@ public class TransactionHandler {
 		if (priceToPay > balance)
 			throw new NotEnoughBalanceException("Nao existe saldo suficiente");
 
-		buyer.adjustBalance(-priceToPay);
-		sellerUser.adjustBalance(priceToPay);
-		wad.adjustQuantityAndPrice(-quantity, wad.getPrice());
-		if (wad.getQuantity() == 0) {
-			WineAdCatalog wineAdCatalog = WineAdCatalog.getInstance();
-			wineAdCatalog.remove(wad);
+		Transaction ts = new Transaction(true, wine.getName(), quantity, priceToPay / quantity, buyer.getName(),
+				signature);
+
+		try {
+			if (ts.validateBuyTransaction()) {
+				buyer.adjustBalance(-priceToPay);
+				sellerUser.adjustBalance(priceToPay);
+				wad.adjustQuantityAndPrice(-quantity, wad.getPrice());
+				if (wad.getQuantity() == 0) {
+					WineAdCatalog wineAdCatalog = WineAdCatalog.getInstance();
+					wineAdCatalog.remove(wad);
+				}
+				BlockChain.getInstance().addTransaction(ts);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+
 	}
 }

@@ -242,10 +242,9 @@ class ServerThread extends Thread {
 		String wine = in.readUTF();
 		double price = in.readDouble();
 		int qty = in.readInt();
-		String userName = in.readUTF();
 		byte[] signature = (byte[]) in.readObject();
 
-		TransactionHandler.sell(user, wine, price, qty, userName, signature);
+		TransactionHandler.sell(user, wine, price, qty, signature);
 		out.writeUTF(String.format("%d quantidade(s) de vinho %s colocada(s) a venda por %.2f com sucesso!", qty, wine,
 				price));
 	}
@@ -262,14 +261,13 @@ class ServerThread extends Thread {
 	}
 
 	private static void buy(ObjectInputStream in, ObjectOutputStream out, User user) throws Exception {
-		////////////////////////////////////////////////////////////////////////
-		// TODO verificar assinatura do cliente e escrever na blockchain ///////
-		////////////////////////////////////////////////////////////////////////
-		String arg1 = in.readUTF();
-		String arg2 = in.readUTF();
-		int num = Integer.parseInt(in.readUTF());
-		TransactionHandler.buy(user, arg1, arg2, num);
-		out.writeUTF(String.format("O utilizador %s comprou %d unidades de vinho %s", arg2, num, arg1));
+		String wine = in.readUTF();
+		String seller = in.readUTF();
+		int num = in.readInt();
+		byte[] signature = (byte[]) in.readObject();
+
+		TransactionHandler.buy(user, wine, seller, num, signature);
+		out.writeUTF(String.format("O utilizador %s comprou %d unidades de vinho %s", seller, num, wine));
 	}
 
 	private static void wallet(ObjectOutputStream out, User user) throws Exception {

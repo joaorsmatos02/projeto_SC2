@@ -150,7 +150,7 @@ public class Tintolmarket {
 				wait = view(out, tokens);
 				image = in.readBoolean();
 			} else if (tokens[0].equals("b") || tokens[0].equals("buy")) {
-				wait = buy(out, tokens);
+				wait = buy(out, tokens, key);
 			} else if (tokens[0].equals("w") || tokens[0].equals("wallet")) {
 				wait = wallet(out, tokens);
 			} else if (tokens[0].equals("c") || tokens[0].equals("classify")) {
@@ -226,17 +226,16 @@ public class Tintolmarket {
 			wait = false;
 		} else {
 
-			String vinhoId = tokens[1];
-			double valorUnidade = Double.parseDouble(tokens[2]);
-			int unidades = Integer.parseInt(tokens[3]);
-			String s = String.format("%s%d%.2f%s", vinhoId, unidades, valorUnidade, name);
+			String wine = tokens[1];
+			int qty = Integer.parseInt(tokens[3]);
+			double value = Double.parseDouble(tokens[2]);
+			String s = String.format("%s%d%.2f", wine, qty, value);
 			byte[] signed = Utils.signString(privateKey, s);
 
 			out.writeUTF("s");
-			out.writeUTF(vinhoId);
-			out.writeDouble(valorUnidade);
-			out.writeInt(unidades);
-			out.writeUTF(name);
+			out.writeUTF(wine);
+			out.writeDouble(value);
+			out.writeInt(qty);
 			out.writeObject(signed);
 		}
 		return wait;
@@ -255,20 +254,24 @@ public class Tintolmarket {
 		return wait;
 	}
 
-	private static boolean buy(ObjectOutputStream out, String[] tokens) throws Exception {
+	private static boolean buy(ObjectOutputStream out, String[] tokens, PrivateKey privateKey) throws Exception {
 		boolean wait = true;
 		if (tokens.length != 4) {
 			System.out.println("O comando buy e usado na forma \"buy <wine> <seller> <quantity>\"");
 			wait = false;
 		} else {
-			//////////////////////////////////////////////////////////////////////
-			// TODO////////////////// enviar informacao assinada (4.3) ///////////////
-			/////////////////////////////////////////////////////////////////////////
+
+			String wine = tokens[1];
+			int qty = Integer.parseInt(tokens[3]);
+			String seller = tokens[2];
+			String s = String.format("%s%d%s", wine, qty, seller);
+			byte[] signed = Utils.signString(privateKey, s);
 
 			out.writeUTF("b");
-			out.writeUTF(tokens[1]);
-			out.writeUTF(tokens[2]);
-			out.writeUTF(tokens[3]);
+			out.writeUTF(wine);
+			out.writeUTF(seller);
+			out.writeInt(qty);
+			out.writeObject(signed);
 		}
 		return wait;
 	}

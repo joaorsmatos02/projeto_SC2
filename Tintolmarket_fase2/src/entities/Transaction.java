@@ -21,19 +21,24 @@ public class Transaction implements Serializable {
 	private String userId;
 	private byte[] signature;
 
-	public Transaction(boolean type, String vinhoId, int unidades, double valorUnidade, String userId,
-			byte[] assinatura) {
+	public Transaction(boolean type, String wineId, int units, double value, String userId, byte[] signature) {
 		this.type = type;
-		this.wineId = vinhoId;
-		this.units = unidades;
-		this.unitValue = valorUnidade;
+		this.wineId = wineId;
+		this.units = units;
+		this.unitValue = value;
 		this.userId = userId;
-		this.signature = assinatura;
+		this.signature = signature;
 	}
 
-	public boolean validateTransaction() {
+	public boolean validateSellTransaction() {
 		PublicKey key = UserCatalog.getInstance().getPublicKey(userId);
-		String f = String.format("%s%d%.2f%s", wineId, units, unitValue, userId);
+		String f = String.format("%s%d%.2f", wineId, units, unitValue);
+		return Utils.verifySignature(key, f.getBytes(StandardCharsets.UTF_8), signature);
+	}
+
+	public boolean validateBuyTransaction() {
+		PublicKey key = UserCatalog.getInstance().getPublicKey(userId);
+		String f = String.format("%s%d%s", wineId, units, userId);
 		return Utils.verifySignature(key, f.getBytes(StandardCharsets.UTF_8), signature);
 	}
 
