@@ -129,7 +129,7 @@ public class Block implements Serializable {
 		try {
 			MessageDigest digest = MessageDigest.getInstance("SHA-256");
 			byte[] hash = digest.digest(this.toString().getBytes());
-			return hash; // nao pode considerar a assinatura anterior
+			return hash;
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}

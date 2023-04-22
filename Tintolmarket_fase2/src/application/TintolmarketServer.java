@@ -178,6 +178,7 @@ class ServerThread extends Thread {
 	private void interact(User user, SSLSocket socket, ObjectInputStream in, ObjectOutputStream out) throws Exception {
 		boolean exit = false;
 		while (!exit) {
+			boolean image = false;
 			try {
 				String command = in.readUTF();
 				switch (command) {
@@ -188,6 +189,7 @@ class ServerThread extends Thread {
 					sell(in, out, user);
 					break;
 				case "v":
+					image = true;
 					view(in, out);
 					break;
 				case "b":
@@ -213,8 +215,10 @@ class ServerThread extends Thread {
 					break;
 				}
 				out.flush();
+				image = false;
 			} catch (WineNotFoundException e) {
-				out.writeBoolean(false);
+				if (image)
+					out.writeBoolean(false);
 				out.writeUTF(e.getMessage());
 				out.flush();
 			} catch (Exception e) {
@@ -245,6 +249,7 @@ class ServerThread extends Thread {
 		byte[] signature = (byte[]) in.readObject();
 
 		TransactionHandler.sell(user, wine, price, qty, signature);
+		out.writeBoolean(true);
 		out.writeUTF(String.format("%d quantidade(s) de vinho %s colocada(s) a venda por %.2f com sucesso!", qty, wine,
 				price));
 	}
