@@ -10,7 +10,6 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.Signature;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
@@ -22,6 +21,7 @@ import java.util.Scanner;
 
 import entities.User;
 import exceptions.WrongCredentialsException;
+import utils.Utils;
 
 /**
  * A classe UserCatalog e responsavel por gerir o catalogo de utilizadores. Esta
@@ -117,10 +117,7 @@ public class UserCatalog {
 			FileInputStream fis = new FileInputStream("stores//server//" + certName);
 			Certificate certificate = certificateFactory.generateCertificate(fis);
 			fis.close();
-			Signature s = Signature.getInstance("SHA256withRSA");
-			s.initVerify(certificate);
-			s.update(nonce);
-			result = s.verify(encryptedNonce);
+			result = Utils.verifySignature(certificate.getPublicKey(), nonce, encryptedNonce);
 		}
 
 		if (!result)
@@ -141,11 +138,8 @@ public class UserCatalog {
 		byte[] encryptedNonce = (byte[]) in.readObject(); // receber assinatura e certificado
 		Certificate cert = (Certificate) in.readObject();
 
-		// verificar assinatura e certificado
-		Signature s = Signature.getInstance("SHA256withRSA");
-		s.initVerify(cert);
-		s.update(nonce);
-		result = s.verify(encryptedNonce);
+		// verificar assinatura
+		result = Utils.verifySignature(cert.getPublicKey(), recievedNonce, encryptedNonce);
 
 		// se bem sucedido guardar certificado e user
 		if (result) {

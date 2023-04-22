@@ -50,16 +50,56 @@ public class Utils {
 		}
 	}
 
-	public static byte[] signString(PrivateKey privateKey, String m) {
+	/**
+	 * Assina o nonce com a chave privada fornecida
+	 *
+	 * @param pk    a chave a usar na assinatura
+	 * @param nonce o nonce a assinar
+	 * @return um byte[] com o nonce assinado
+	 * @throws Exception se ocorrer algum erro durante a assinatura
+	 */
+	public static byte[] signString(PrivateKey privateKey, String nonce) {
 		try {
 			Signature signature = Signature.getInstance("SHA256withRSA");
 			signature.initSign(privateKey);
-			signature.update(m.getBytes(StandardCharsets.UTF_8));
+			signature.update(nonce.getBytes(StandardCharsets.UTF_8));
 			return signature.sign();
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
 		return null;
+	}
+
+	/**
+	 * Assina o nonce com a chave privada fornecida
+	 *
+	 * @param pk    a chave a usar na assinatura
+	 * @param nonce o nonce a assinar
+	 * @return um byte[] com o nonce assinado
+	 * @throws Exception se ocorrer algum erro durante a assinatura
+	 */
+	public static byte[] signByteArray(PrivateKey pk, byte[] nonce) {
+		try {
+			Signature s = Signature.getInstance("SHA256withRSA");
+			s.initSign(pk);
+			s.update(nonce);
+			return s.sign();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public static boolean verifySignature(PublicKey publicKey, byte[] nonce, byte[] encryptedNonce) {
+		try {
+			Signature signature = Signature.getInstance("SHA256withRSA");
+			signature.initVerify(publicKey);
+			signature.update(nonce);
+			return signature.verify(encryptedNonce);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		return false;
 	}
 
 	public static String cipher(int mode, Key key, String data) throws Exception {

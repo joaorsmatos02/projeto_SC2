@@ -8,7 +8,6 @@ import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.PrivateKey;
-import java.security.Signature;
 import java.security.cert.Certificate;
 import java.util.Scanner;
 
@@ -104,7 +103,7 @@ public class Tintolmarket {
 
 		byte[] nonce = (byte[]) in.readObject();
 
-		byte[] signedNonce = sign(nonce, key);
+		byte[] signedNonce = Utils.signByteArray(key, nonce);
 
 		if (in.readBoolean()) { // novo user
 			out.writeObject(nonce);
@@ -119,21 +118,6 @@ public class Tintolmarket {
 			System.out.println("Autenticacao bem sucedida!");
 		else
 			System.out.println("Erro na autenticacao!");
-	}
-
-	/**
-	 * Assina o nonce com a chave privada fornecida
-	 * 
-	 * @param nonce o nonce a assinar
-	 * @param pk    a chave a usar na assinatura
-	 * @return um byte[] com o nonce assinado
-	 * @throws Exception se ocorrer algum erro durante a assinatura
-	 */
-	private static byte[] sign(byte[] nonce, PrivateKey pk) throws Exception {
-		Signature s = Signature.getInstance("SHA256withRSA");
-		s.initSign(pk);
-		s.update(nonce);
-		return s.sign();
 	}
 
 	/**
