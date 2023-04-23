@@ -35,6 +35,9 @@ import handlers.TransactionHandler;
  */
 public class TintolmarketServer {
 
+	private static SecretKey fileKey;
+	private static KeyStore keyStore;
+
 	public static void main(String[] args) {
 
 		SSLServerSocket serverSocket = null;
@@ -90,14 +93,12 @@ public class TintolmarketServer {
 				System.exit(0);
 			}
 
-			SecretKey fileKey = generateKey(filePassword);
+			KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+			keyGenerator.init(256, new SecureRandom(filePassword.getBytes()));
+			fileKey = keyGenerator.generateKey();
 
-			UserCatalog.setSecretKey(fileKey);
-			UserCatalog.setKeyStore(keyStore);
 			UserCatalog.getInstance();
-			WineCatalog.setSecretKey(fileKey);
 			WineCatalog.getInstance();
-			WineAdCatalog.setSecretKey(fileKey);
 			WineAdCatalog.getInstance();
 
 			while (true) {
@@ -117,10 +118,12 @@ public class TintolmarketServer {
 		}
 	}
 
-	private static SecretKey generateKey(String password) throws Exception {
-		KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-		keyGenerator.init(256, new SecureRandom(password.getBytes()));
-		return keyGenerator.generateKey();
+	public static SecretKey getFileKey() {
+		return fileKey;
+	}
+
+	public static KeyStore getKeyStore() {
+		return keyStore;
 	}
 
 }

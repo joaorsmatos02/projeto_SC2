@@ -1,18 +1,19 @@
 package catalogs;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 
+import application.TintolmarketServer;
 import entities.Wine;
 import exceptions.RepeatedWineException;
+import utils.Utils;
 
 /**
  * A classe WineCatalog e responsavel por gerir o catalogo de vinhos. Esta
@@ -28,6 +29,7 @@ public class WineCatalog {
 	 * Construtor privado da classe WineCatalog.
 	 */
 	private WineCatalog() {
+		fileKey = TintolmarketServer.getFileKey();
 		this.wines = new ArrayList<>();
 		File txtFolder = new File("txtFiles");
 		File wineInfo = new File("txtFiles//wineCatalog.txt");
@@ -55,28 +57,24 @@ public class WineCatalog {
 		return instance;
 	}
 
-	public static void setSecretKey(SecretKey sk) {
-		fileKey = sk;
-	}
-
 	/**
 	 * Le e armazena os vinhos do arquivo de texto wineInfo.
 	 * 
 	 * @param wineInfo O arquivo de texto com as informacoes dos vinhos.
 	 */
 	private void getWinesByTextFile(File wineInfo) {
-		Scanner sc = null;
 		try {
-			sc = new Scanner(wineInfo);
-		} catch (FileNotFoundException e) {
+			Scanner sc = new Scanner(wineInfo);
+			while (sc.hasNextLine()) {
+				String[] line = Utils.cipherSymmetricString(Cipher.DECRYPT_MODE, fileKey, sc.nextLine())
+						.split("(?!\\{.*)\\s(?![^{]*?\\})");
+				this.wines.add(new Wine(line[0], new File(line[1]), stringToHashMap(line[2])));
+			}
+			sc.close();
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		while (sc.hasNextLine()) {
-			String[] line = sc.nextLine().split("(?!\\{.*)\\s(?![^{]*?\\})");
-			this.wines.add(new Wine(line[0], new File(line[1]), stringToHashMap(line[2])));
-		}
-		sc.close();
 	}
 
 	/**
@@ -109,17 +107,16 @@ public class WineCatalog {
 	 * @throws RepeatedWineException Se ja existir um vinho com o mesmo nome.
 	 */
 	public synchronized void createWine(String wineName, File image) throws RepeatedWineException {
-		if (getWineByName(wineName) != null) {
+		if (getWineByName(wineName) != null)
 			throw new RepeatedWineException("Ja existe um vinho com o mesmo nome.");
-		}
 		try {
 			File wineInfo = new File("txtFiles//wineCatalog.txt");
 			FileWriter fw = new FileWriter(wineInfo, true);
 			Wine newWine = new Wine(wineName, image, new HashMap<>());
 			this.wines.add(newWine);
-			fw.write(newWine + "\r\n");
+			fw.write(Utils.cipherSymmetricString(Cipher.ENCRYPT_MODE, fileKey, newWine.toString()) + "\r\n");
 			fw.close();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

@@ -1,15 +1,15 @@
 package catalogs;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 
+import application.TintolmarketServer;
 import entities.User;
 import entities.Wine;
 import entities.WineAd;
@@ -30,6 +30,7 @@ public class WineAdCatalog {
 	 * Construtor privado da classe WineAdCatalog.
 	 */
 	private WineAdCatalog() {
+		fileKey = TintolmarketServer.getFileKey();
 		wineAds = new ArrayList<>();
 		File txtFolder = new File("txtFiles");
 		File wineAdsInfo = new File("txtFiles//wineAdsCatalog.txt");
@@ -57,10 +58,6 @@ public class WineAdCatalog {
 		return instance;
 	}
 
-	public static void setSecretKey(SecretKey sk) {
-		fileKey = sk;
-	}
-
 	/**
 	 * Le e armazena os anuncios de vinho do arquivo de texto wineAdsInfo.
 	 * 
@@ -68,22 +65,20 @@ public class WineAdCatalog {
 	 *                    vinho.
 	 */
 	private void getWineAdsByTextFile(File wineAdsInfo) {
-		Scanner sc = null;
 		try {
-			sc = new Scanner(wineAdsInfo);
-		} catch (FileNotFoundException e) {
+			Scanner sc = new Scanner(wineAdsInfo);
+			while (sc.hasNextLine()) {
+				String[] line = Utils.cipherSymmetricString(Cipher.DECRYPT_MODE, fileKey, sc.nextLine()).split(" ");
+				UserCatalog uc = UserCatalog.getInstance();
+				WineCatalog wc = WineCatalog.getInstance();
+				wineAds.add(new WineAd(uc.getUserByName(line[0]), wc.getWineByName(line[1]),
+						Double.parseDouble(line[2]), Integer.parseInt(line[3])));
+			}
+			sc.close();
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		while (sc.hasNextLine()) {
-			String[] line = sc.nextLine().split(" ");
-			UserCatalog uc = UserCatalog.getInstance();
-			WineCatalog wc = WineCatalog.getInstance();
-			wineAds.add(new WineAd(uc.getUserByName(line[0]), wc.getWineByName(line[1]), Double.parseDouble(line[2]),
-					Integer.parseInt(line[3])));
-			break;
-		}
-		sc.close();
 	}
 
 	/**
@@ -103,10 +98,10 @@ public class WineAdCatalog {
 	}
 
 	/**
-	 * Retorna uma lista de anúncios de vinho associados a um vinho específico.
+	 * Retorna uma lista de anuncios de vinho associados a um vinho específico.
 	 * 
 	 * @param wine O vinho a ser pesquisado.
-	 * @return Uma lista de anúncios de vinho associados ao vinho.
+	 * @return Uma lista de anuncios de vinho associados ao vinho.
 	 */
 	public List<WineAd> getWineAdsByWine(Wine wine) {
 		List<WineAd> list = new ArrayList<>();
@@ -127,10 +122,10 @@ public class WineAdCatalog {
 		try {
 			File wineAdInfo = new File("txtFiles//wineAdsCatalog.txt");
 			FileWriter fw = new FileWriter(wineAdInfo, true);
-			fw.write(wineAd.toString() + "\r\n");
+			fw.write(Utils.cipherSymmetricString(Cipher.ENCRYPT_MODE, fileKey, wineAd.toString()) + "\r\n");
 			this.wineAds.add(wineAd);
 			fw.close();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

@@ -7,9 +7,13 @@ import java.security.Key;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
+import java.util.Base64;
 import java.util.Scanner;
 
 import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+
+import application.TintolmarketServer;
 
 /**
  * Classe Utils que fornece metodos uteis para manipular arquivos e outros
@@ -28,17 +32,18 @@ public class Utils {
 	 */
 	public static synchronized void replaceLine(File file, String oldLine, String newLine) {
 		try {
+			SecretKey sk = TintolmarketServer.getFileKey();
 			File newFile = new File("temp.txt");
 			newFile.createNewFile();
 			FileWriter fw = new FileWriter(newFile, true);
 			Scanner sc = new Scanner(file);
 			while (sc.hasNextLine()) {
-				String next = sc.nextLine();
+				String next = cipherSymmetricString(Cipher.DECRYPT_MODE, sk, sc.nextLine());
 				if (next.equals(oldLine)) {
 					if (newLine != null)
-						fw.append(newLine + "\n");
+						fw.append(cipherSymmetricString(Cipher.ENCRYPT_MODE, sk, newLine + "\n"));
 				} else
-					fw.append(next + "\n");
+					fw.append(cipherSymmetricString(Cipher.ENCRYPT_MODE, sk, next + "\n"));
 			}
 			fw.close();
 			sc.close();
@@ -91,12 +96,40 @@ public class Utils {
 		return false;
 	}
 
+	public static String cipherAssimetricString(int mode, Key key, String data) throws Exception {
+		if (mode == Cipher.DECRYPT_MODE) {
+			byte[] bytes = Base64.getDecoder().decode(data.getBytes(StandardCharsets.UTF_8));
+			bytes = cipherAsymmetric(mode, key, bytes);
+			return new String(bytes, StandardCharsets.UTF_8);
+		} else {
+			byte[] bytes = cipherAsymmetric(mode, key, data.getBytes(StandardCharsets.UTF_8));
+			return Base64.getEncoder().encodeToString(bytes);
+		}
+	}
+
 	public static byte[] cipherAsymmetric(int mode, Key key, byte[] data) throws Exception {
 		Cipher cipher = Cipher.getInstance("RSA");
 		if (mode == Cipher.DECRYPT_MODE)
 			cipher.init(Cipher.DECRYPT_MODE, (PrivateKey) key);
 		else
 			cipher.init(Cipher.ENCRYPT_MODE, (PublicKey) key);
+		return cipher.doFinal(data);
+	}
+
+	public static String cipherSymmetricString(int mode, SecretKey key, String data) throws Exception {
+		if (mode == Cipher.DECRYPT_MODE) {
+			byte[] bytes = Base64.getDecoder().decode(data.getBytes(StandardCharsets.UTF_8));
+			bytes = cipherSymmetric(mode, key, bytes);
+			return new String(bytes, StandardCharsets.UTF_8);
+		} else {
+			byte[] bytes = cipherSymmetric(mode, key, data.getBytes(StandardCharsets.UTF_8));
+			return Base64.getEncoder().encodeToString(bytes);
+		}
+	}
+
+	public static byte[] cipherSymmetric(int mode, SecretKey key, byte[] data) throws Exception {
+		Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+		cipher.init(mode, key);
 		return cipher.doFinal(data);
 	}
 

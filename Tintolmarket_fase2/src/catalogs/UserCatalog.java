@@ -17,8 +17,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 
+import application.TintolmarketServer;
 import entities.User;
 import exceptions.WrongCredentialsException;
 import utils.Utils;
@@ -40,6 +42,8 @@ public class UserCatalog {
 	 * Construtor privado da classe UserCatalog.
 	 */
 	private UserCatalog() {
+		keyStore = TintolmarketServer.getKeyStore();
+		fileKey = TintolmarketServer.getFileKey();
 		users = new ArrayList<>();
 		File txtFolder = new File("txtFiles");
 		userInfo = new File("txtFiles//userCatalog.txt");
@@ -67,14 +71,6 @@ public class UserCatalog {
 		return instance;
 	}
 
-	public static void setKeyStore(KeyStore ks) {
-		keyStore = ks;
-	}
-
-	public static void setSecretKey(SecretKey sk) {
-		fileKey = sk;
-	}
-
 	/**
 	 * Efetua o login do utilizador ou cria um novo utilizador.
 	 * 
@@ -97,7 +93,7 @@ public class UserCatalog {
 		String certName = "";
 		String line;
 		while (sc.hasNextLine()) {
-			line = sc.nextLine();
+			line = Utils.cipherSymmetricString(Cipher.DECRYPT_MODE, fileKey, sc.nextLine());
 			if (line.startsWith(user)) {
 				newUser = false;
 				certName = line.split(":")[1];
@@ -160,7 +156,8 @@ public class UserCatalog {
 
 			this.addUser(user);
 			fw = new FileWriter("txtFiles//userCreds.txt", true);
-			fw.write(user + ":" + certFile.getName() + "\n");
+			fw.write(Utils.cipherSymmetricString(Cipher.ENCRYPT_MODE, fileKey, user + ":" + certFile.getName())
+					+ "\r\n");
 			fw.close();
 		}
 		return result;
@@ -175,7 +172,8 @@ public class UserCatalog {
 		try {
 			Scanner sc = new Scanner(userInfo);
 			while (sc.hasNextLine()) {
-				String[] line = sc.nextLine().split("(?!\\{.*)\\s(?![^{]*?\\})");
+				String[] line = Utils.cipherSymmetricString(Cipher.DECRYPT_MODE, fileKey, sc.nextLine())
+						.split("(?!\\{.*)\\s(?![^{]*?\\})");
 				users.add(new User(line[0], Double.parseDouble(line[1]), stringToHashMap(line[2])));
 			}
 			sc.close();
@@ -208,7 +206,7 @@ public class UserCatalog {
 			this.users.add(u);
 			File userInfo = new File("txtFiles//userCatalog.txt");
 			FileWriter fw = new FileWriter(userInfo, true);
-			fw.write(u.toString() + "\r\n");
+			fw.write(Utils.cipherSymmetricString(Cipher.ENCRYPT_MODE, fileKey, u.toString() + "\r\n"));
 			fw.close();
 		} catch (Exception e) {
 			e.printStackTrace();

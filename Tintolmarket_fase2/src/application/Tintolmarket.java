@@ -5,12 +5,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
-import java.util.Base64;
 import java.util.Scanner;
 
 import javax.crypto.Cipher;
@@ -312,11 +310,9 @@ public class Tintolmarket {
 			for (int i = 2; i < tokens.length; i++)
 				sb.append(tokens[i] + " ");
 			Certificate dest = trustStore.getCertificate("newcert_" + tokens[1]);
-			byte[] cypheredMessage = Utils.cipherAsymmetric(Cipher.ENCRYPT_MODE, dest.getPublicKey(),
-					sb.toString().getBytes(StandardCharsets.UTF_8));
 			out.writeUTF("t");
 			out.writeUTF(tokens[1]);
-			out.writeUTF(Base64.getEncoder().encodeToString(cypheredMessage));
+			out.writeUTF(Utils.cipherAssimetricString(Cipher.ENCRYPT_MODE, dest.getPublicKey(), sb.toString()));
 		}
 		return wait;
 	}
@@ -334,12 +330,8 @@ public class Tintolmarket {
 				for (String s : users) {
 					s = s.substring(s.indexOf("[") + 1, s.length() - 3);
 					String[] msgs = s.split(", ");
-					for (String msg : msgs) {
-						byte[] decryptedData = Base64.getDecoder().decode(msg);
-						recieved = recieved.replace(msg,
-								new String(Utils.cipherAsymmetric(Cipher.DECRYPT_MODE, key, decryptedData),
-										StandardCharsets.UTF_8));
-					}
+					for (String msg : msgs)
+						recieved = recieved.replace(msg, Utils.cipherAssimetricString(Cipher.DECRYPT_MODE, key, msg));
 				}
 			}
 			System.out.println(recieved);
