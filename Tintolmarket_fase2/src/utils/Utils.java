@@ -7,7 +7,6 @@ import java.security.Key;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
-import java.util.Base64;
 import java.util.Scanner;
 
 import javax.crypto.Cipher;
@@ -92,17 +91,13 @@ public class Utils {
 		return false;
 	}
 
-	public static String cipher(int mode, Key key, String data) throws Exception {
+	public static byte[] cipherAsymmetric(int mode, Key key, byte[] data) throws Exception {
 		Cipher cipher = Cipher.getInstance("RSA");
-		if (mode == Cipher.DECRYPT_MODE) {
+		if (mode == Cipher.DECRYPT_MODE)
 			cipher.init(Cipher.DECRYPT_MODE, (PrivateKey) key);
-			byte[] decryptedData = cipher.doFinal(Base64.getDecoder().decode(data));
-			return new String(decryptedData, StandardCharsets.UTF_8);
-		} else {
+		else
 			cipher.init(Cipher.ENCRYPT_MODE, (PublicKey) key);
-			byte[] encryptedData = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
-			return Base64.getEncoder().encodeToString(encryptedData);
-		}
+		return cipher.doFinal(data);
 	}
 
 }
