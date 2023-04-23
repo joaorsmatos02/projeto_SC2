@@ -102,7 +102,7 @@ public class BlockChain {
 		last.add(ts);
 		if (last.isFull()) {
 			signBlock(last);
-			Block newBlock = new Block(blocks.size() + 1, last.generate32ByteHash());
+			Block newBlock = new Block(blocks.size() + 1, last.generate32ByteHash(true));
 			blocks.add(newBlock);
 		}
 	}
@@ -113,7 +113,7 @@ public class BlockChain {
 	 * @param b o bloco a assinar
 	 */
 	private void signBlock(Block b) {
-		byte[] toSign = b.generate32ByteHash();
+		byte[] toSign = b.generate32ByteHash(false);
 		byte[] signed = Utils.signByteArray(serverPrivateKey, toSign);
 		b.setSignature(signed);
 	}
@@ -122,7 +122,7 @@ public class BlockChain {
 	 * Lista todas as transacoes presentes na blockchain
 	 * 
 	 * @return uma string com uma representacao textual das transacoes
-	 * @throws BlockChainException 
+	 * @throws BlockChainException
 	 */
 	public String listAllTransactions() throws BlockChainException {
 		verifyIntegrity();

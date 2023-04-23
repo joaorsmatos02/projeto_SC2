@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.util.Arrays;
 
 import entities.Transaction;
 import exceptions.BlockChainException;
@@ -79,7 +80,7 @@ public class Block implements Serializable {
 		for (byte b : previousHash) {
 			if (b != 0) {
 				Block prev = readFromFile(new File("blockChain//block_" + (num - 1) + ".blk"));
-				byte[] hash = prev.generate32ByteHash();
+				byte[] hash = prev.generate32ByteHash(true);
 				for (int i = 0; i < hash.length; i++)
 					if (hash[i] != previousHash[i])
 						return false;
@@ -88,7 +89,7 @@ public class Block implements Serializable {
 			}
 		}
 		if (result && isFull()) {
-			result = Utils.verifySignature(pk, generate32ByteHash(), signature);
+			result = Utils.verifySignature(pk, generate32ByteHash(false), signature);
 		}
 		return result;
 	}
@@ -181,15 +182,23 @@ public class Block implements Serializable {
 	}
 
 	/**
-	 * Gera um hash de 32 bytes para o objeto atual. Este hash e usado para ser
-	 * assinado pelo servidor, de forma a comprovar a autenticidade do bloco
+	 * Gera um hash de 32 bytes para o objeto atual. Este hash pode ser usado para
+	 * ser assinado pelo servidor, de forma a comprovar a autenticidade do bloco ou
+	 * para ser colocado no bloco seguinte
 	 * 
+	 * @param includeSignature se true, a assinatura vai ser incluida no hash, que
+	 *                         deve ser colocado no bloco seguinte, se false a
+	 *                         assinatura nao e usada e deve ser assinado pelo
+	 *                         server
 	 * @return um array com 32 bytes de hash
 	 */
-	public byte[] generate32ByteHash() {
+	public byte[] generate32ByteHash(boolean includeSignature) {
 		try {
+			String s = Arrays.toString(previousHash) + num + transactionCount + Arrays.toString(transactions);
+			if (includeSignature)
+				s += Arrays.toString(signature);
 			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-			byte[] hash = digest.digest(this.toString().getBytes());
+			byte[] hash = digest.digest(s.getBytes());
 			return hash;
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
