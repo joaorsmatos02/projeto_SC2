@@ -41,9 +41,9 @@ public class Utils {
 				String next = cipherSymmetricString(Cipher.DECRYPT_MODE, sk, sc.nextLine());
 				if (next.equals(oldLine)) {
 					if (newLine != null)
-						fw.append(cipherSymmetricString(Cipher.ENCRYPT_MODE, sk, newLine + "\n"));
+						fw.append(cipherSymmetricString(Cipher.ENCRYPT_MODE, sk, newLine) + "\r\n");
 				} else
-					fw.append(cipherSymmetricString(Cipher.ENCRYPT_MODE, sk, next + "\n"));
+					fw.append(cipherSymmetricString(Cipher.ENCRYPT_MODE, sk, next) + "\r\n");
 			}
 			fw.close();
 			sc.close();

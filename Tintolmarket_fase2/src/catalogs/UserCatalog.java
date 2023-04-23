@@ -206,7 +206,7 @@ public class UserCatalog {
 			this.users.add(u);
 			File userInfo = new File("txtFiles//userCatalog.txt");
 			FileWriter fw = new FileWriter(userInfo, true);
-			fw.write(Utils.cipherSymmetricString(Cipher.ENCRYPT_MODE, fileKey, u.toString() + "\r\n"));
+			fw.write(Utils.cipherSymmetricString(Cipher.ENCRYPT_MODE, fileKey, u.toString()) + "\r\n");
 			fw.close();
 		} catch (Exception e) {
 			e.printStackTrace();
