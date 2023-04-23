@@ -24,10 +24,11 @@ public class TransactionHandler {
 	/**
 	 * Cria um novo anuncio de vinho para venda.
 	 * 
-	 * @param user     O utilizador que deseja vender o vinho.
-	 * @param wine     O nome do vinho a ser vendido.
-	 * @param price    O preco unitario do vinho.
-	 * @param quantity A quantidade disponivel para venda.
+	 * @param user      O utilizador que deseja vender o vinho.
+	 * @param wine      O nome do vinho a ser vendido.
+	 * @param price     O preco unitario do vinho.
+	 * @param quantity  A quantidade disponivel para venda.
+	 * @param signature A assinatura da transacao
 	 * @throws Exception
 	 */
 	public static void sell(User user, String wine, double price, int quantity, byte[] signature) throws Exception {
@@ -49,7 +50,7 @@ public class TransactionHandler {
 	 * @param wineName  O nome do vinho a ser comprado.
 	 * @param seller    O nome do utilizador vendedor.
 	 * @param quantity  A quantidade desejada para compra.
-	 * @param signature A assinatura do clientes
+	 * @param signature A assinatura do cliente
 	 * @throws NotEnoughStockException   Se nao houver stock suficiente.
 	 * @throws UserNotFoundException     Se o utilizador nao for encontrado.
 	 * @throws WineNotFoundException     Se o vinho nao for encontrado.

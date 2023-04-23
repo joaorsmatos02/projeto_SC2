@@ -128,6 +128,17 @@ public class UserCatalog {
 		return user;
 	}
 
+	/**
+	 * Regista um novo utilizador no catalogo
+	 * 
+	 * @param in       stream de input
+	 * @param out      stream de output
+	 * @param keyStore a keystore a usar
+	 * @param user     o nome do novo utilizador
+	 * @param nonce    o nonce de verificacao gerado
+	 * @return true se o registo foi efetuado com sucesso, false caso contrario
+	 * @throws Exception
+	 */
 	private boolean registerUser(ObjectInputStream in, ObjectOutputStream out, KeyStore keyStore, String user,
 			byte[] nonce) throws Exception {
 		boolean result = true;
@@ -213,6 +224,12 @@ public class UserCatalog {
 		}
 	}
 
+	/**
+	 * Obtem a chave publica de um user
+	 * 
+	 * @param userId o nome do user
+	 * @return a chave publica
+	 */
 	public PublicKey getPublicKey(String userId) {
 		try {
 			return getUserByName(userId).getCertificate().getPublicKey();

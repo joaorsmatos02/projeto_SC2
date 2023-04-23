@@ -15,8 +15,16 @@ import entities.Transaction;
 import exceptions.BlockChainException;
 import utils.Utils;
 
+/**
+ * 
+ * A classe Block representa um bloco da blockchain usada
+ *
+ */
 public class Block implements Serializable {
 
+	/**
+	 * Seed usada para serializar blocos em ficheiros .blk
+	 */
 	private static final long serialVersionUID = 7874046776398834019L;
 
 	private byte[] previousHash;
@@ -25,6 +33,12 @@ public class Block implements Serializable {
 	private Transaction[] transactions;
 	private byte[] signature;
 
+	/**
+	 * Construtor da classe
+	 * 
+	 * @param order        numero de ordem do bloco a construir
+	 * @param previousHash hash do bloco anterior
+	 */
 	public Block(int order, byte[] previousHash) {
 		this.num = order;
 		this.transactionCount = 0;
@@ -33,15 +47,33 @@ public class Block implements Serializable {
 		save();
 	}
 
+	/**
+	 * Indica se o bloco esta cheio
+	 * 
+	 * @return true se o bloco tiver 5 transacoes, false caso contrario
+	 */
 	public boolean isFull() {
 		return transactionCount == 5;
 	}
 
+	/**
+	 * Assina o bloco atual
+	 * 
+	 * @param s a assinatura
+	 */
 	public void setSignature(byte[] s) {
 		this.signature = s;
 		save();
 	}
 
+	/**
+	 * Verifica se o bloco atual e valido, verificando o hash e assinautura, se
+	 * estiver completo
+	 * 
+	 * @param pk a chave publica usada na validacao da assinatura
+	 * @return true se o bloco e valido, false caso contrario
+	 * @throws BlockChainException se ocorrer um erro na validacao da assinatura
+	 */
 	public boolean isValid(PublicKey pk) throws BlockChainException {
 		boolean result = true;
 		for (byte b : previousHash) {
@@ -61,6 +93,12 @@ public class Block implements Serializable {
 		return result;
 	}
 
+	/**
+	 * Adiciona uma transacao ao bloco
+	 * 
+	 * @param ts a transacao a adicionar
+	 * @throws Exception se ocorrer um erro
+	 */
 	public void add(Transaction ts) throws Exception {
 		if (!isFull()) {
 			transactions[transactionCount] = ts;
@@ -69,6 +107,13 @@ public class Block implements Serializable {
 		}
 	}
 
+	/**
+	 * Cria um bloco a partir de um ficheiro .blk
+	 * 
+	 * @param blockFile o ficheiro a utilizar
+	 * @return o bloco criado
+	 * @throws BlockChainException se ocorrer um erro ao ler o bloco
+	 */
 	public static Block readFromFile(File blockFile) throws BlockChainException {
 		Block res = null;
 		try {
@@ -83,6 +128,13 @@ public class Block implements Serializable {
 		return res;
 	}
 
+	/**
+	 * Funcao de leitura usada na interface serializable
+	 * 
+	 * @param in a inputStream a usar
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 */
 	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
 		previousHash = (byte[]) in.readObject();
 		num = in.readInt();
@@ -94,6 +146,9 @@ public class Block implements Serializable {
 			signature = (byte[]) in.readObject();
 	}
 
+	/**
+	 * Guarda o bloco no seu ficheiro .blk
+	 */
 	private void save() {
 		try {
 			File blockFile = new File("blockChain//block_" + num + ".blk");
@@ -109,6 +164,12 @@ public class Block implements Serializable {
 		}
 	}
 
+	/**
+	 * Funcao de escrita usada na interface serializable
+	 * 
+	 * @param out a outputStream a usar
+	 * @throws IOException
+	 */
 	private void writeObject(ObjectOutputStream out) throws IOException {
 		out.writeObject(previousHash);
 		out.writeInt(num);
@@ -136,6 +197,7 @@ public class Block implements Serializable {
 		return null;
 	}
 
+	@Override
 	public String toString() {
 		String result = "";
 		for (Transaction t : transactions)

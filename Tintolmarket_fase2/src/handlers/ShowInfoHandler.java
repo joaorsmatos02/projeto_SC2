@@ -51,6 +51,12 @@ public class ShowInfoHandler {
 		return inbox;
 	}
 
+	/**
+	 * Lista todas as transacoes presentes na blockchain
+	 * 
+	 * @param blockChain a blockchain mantida pelo server
+	 * @return uma representacao textual de todas as transacoes buy e sell
+	 */
 	public static String list(BlockChain blockChain) {
 		return blockChain.listAllTransactions();
 	}

@@ -181,6 +181,9 @@ public class Tintolmarket {
 		sc.close();
 	}
 
+	/**
+	 * Imprime os comandos da aplicacao
+	 */
 	private static void printCommands() {
 		System.out.println(
 				"Comandos disponiveis: \n\tadd <wine> <image> - adiciona um novo vinho identificado por wine, associado a imagem\r\n"
@@ -198,6 +201,14 @@ public class Tintolmarket {
 						+ "\tread - permite ler as novas mensagens recebidas.");
 	}
 
+	/**
+	 * Representa a funcao add
+	 * 
+	 * @param out    stream de output
+	 * @param tokens o input do user
+	 * @return true se bem sucedido, false caso contrario
+	 * @throws Exception
+	 */
 	private static boolean add(ObjectOutputStream out, String[] tokens) throws Exception {
 		boolean wait = true;
 		if (tokens.length != 3) {
@@ -219,6 +230,15 @@ public class Tintolmarket {
 		return wait;
 	}
 
+	/**
+	 * Representa a funcao sell
+	 * 
+	 * @param out        stream de output
+	 * @param tokens     o input do user
+	 * @param privatekey a chave a usar na assinatura
+	 * @return true se bem sucedido, false caso contrario
+	 * @throws Exception
+	 */
 	private static boolean sell(ObjectOutputStream out, String[] tokens, PrivateKey privateKey) throws Exception {
 		boolean wait = true;
 		if (tokens.length != 4) {
@@ -241,6 +261,14 @@ public class Tintolmarket {
 		return wait;
 	}
 
+	/**
+	 * Representa a funcao view
+	 * 
+	 * @param out    stream de output
+	 * @param tokens o input do user
+	 * @return true se bem sucedido, false caso contrario
+	 * @throws Exception
+	 */
 	private static boolean view(ObjectOutputStream out, String[] tokens) throws Exception {
 		boolean wait = true;
 		if (tokens.length != 2) {
@@ -254,6 +282,15 @@ public class Tintolmarket {
 		return wait;
 	}
 
+	/**
+	 * Representa a funcao buy
+	 * 
+	 * @param out        stream de output
+	 * @param tokens     o input do user
+	 * @param privateKey a chave a usar na assinatura
+	 * @return true se bem sucedido, false caso contrario
+	 * @throws Exception
+	 */
 	private static boolean buy(ObjectOutputStream out, String[] tokens, PrivateKey privateKey) throws Exception {
 		boolean wait = true;
 		if (tokens.length != 4) {
@@ -276,6 +313,14 @@ public class Tintolmarket {
 		return wait;
 	}
 
+	/**
+	 * Representa a funcao wallet
+	 * 
+	 * @param out    stream de output
+	 * @param tokens o input do user
+	 * @return true se bem sucedido, false caso contrario
+	 * @throws Exception
+	 */
 	private static boolean wallet(ObjectOutputStream out, String[] tokens) throws Exception {
 		boolean wait = true;
 		if (tokens.length != 1) {
@@ -287,6 +332,14 @@ public class Tintolmarket {
 		return wait;
 	}
 
+	/**
+	 * Representa a funcao classify
+	 * 
+	 * @param out    stream de output
+	 * @param tokens o input do user
+	 * @return true se bem sucedido, false caso contrario
+	 * @throws Exception
+	 */
 	private static boolean classify(ObjectOutputStream out, String[] tokens) throws Exception {
 		boolean wait = true;
 		if (tokens.length != 3) {
@@ -300,6 +353,15 @@ public class Tintolmarket {
 		return wait;
 	}
 
+	/**
+	 * Representa a funcao talk
+	 * 
+	 * @param out        stream de output
+	 * @param truststore a truststore com os certificados dos utilizadores
+	 * @param tokens     o input do user
+	 * @return true se bem sucedido, false caso contrario
+	 * @throws Exception
+	 */
 	private static boolean talk(ObjectOutputStream out, KeyStore trustStore, String[] tokens) throws Exception {
 		boolean wait = true;
 		if (tokens.length < 3) {
@@ -317,6 +379,16 @@ public class Tintolmarket {
 		return wait;
 	}
 
+	/**
+	 * Representa a funcao read
+	 * 
+	 * @param in     stream de input
+	 * @param out    stream de output
+	 * @param key    a chave privada usada para decifrar as mensagens
+	 * @param tokens o input do user
+	 * @return true se bem sucedido, false caso contrario
+	 * @throws Exception
+	 */
 	private static boolean read(ObjectOutputStream out, ObjectInputStream in, PrivateKey key, String[] tokens)
 			throws Exception {
 		if (tokens.length != 1) {
@@ -339,6 +411,14 @@ public class Tintolmarket {
 		return false;
 	}
 
+	/**
+	 * Representa a funcao talk
+	 * 
+	 * @param out    stream de output
+	 * @param tokens o input do user
+	 * @return true se bem sucedido, false caso contrario
+	 * @throws Exception
+	 */
 	private static boolean list(ObjectOutputStream out, String[] tokens) throws Exception {
 		boolean wait = true;
 		if (tokens.length != 1) {
@@ -350,6 +430,12 @@ public class Tintolmarket {
 		return wait;
 	}
 
+	/**
+	 * Obtem uma imagem do server
+	 * 
+	 * @param in a stream de input
+	 * @throws Exception
+	 */
 	private static void getImage(ObjectInputStream in) throws Exception {
 		File dir = new File(name);
 		if (!dir.exists())

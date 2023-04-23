@@ -7,8 +7,16 @@ import java.security.PublicKey;
 import catalogs.UserCatalog;
 import utils.Utils;
 
+/**
+ * 
+ * A classe Transaction representa uma transacao buy ou sell
+ *
+ */
 public class Transaction implements Serializable {
 
+	/**
+	 * A seed usada na serializacao dos objetos
+	 */
 	private static final long serialVersionUID = 6072210053516028044L;
 
 	/**
@@ -21,6 +29,17 @@ public class Transaction implements Serializable {
 	private String userId;
 	private byte[] signature;
 
+	/**
+	 * Construtor da classe
+	 * 
+	 * @param type      tipo de transacao, false indica uma operacao sell e true
+	 *                  indica buy
+	 * @param wineId    o vinho em questao
+	 * @param units     o numero de unidades
+	 * @param value     o valor de cada unidade
+	 * @param userId    o utilizador
+	 * @param signature assinatura do utilizador
+	 */
 	public Transaction(boolean type, String wineId, int units, double value, String userId, byte[] signature) {
 		this.type = type;
 		this.wineId = wineId;
@@ -30,18 +49,29 @@ public class Transaction implements Serializable {
 		this.signature = signature;
 	}
 
+	/**
+	 * Valida uma transacao do tipo sell
+	 * 
+	 * @return true se transacao valida, false caso contratrio
+	 */
 	public boolean validateSellTransaction() {
 		PublicKey key = UserCatalog.getInstance().getPublicKey(userId);
 		String f = String.format("%s%d%.2f", wineId, units, unitValue);
 		return Utils.verifySignature(key, f.getBytes(StandardCharsets.UTF_8), signature);
 	}
 
+	/**
+	 * Valida uma transacao do tipo buy
+	 * 
+	 * @return true se transacao valida, false caso contratrio
+	 */
 	public boolean validateBuyTransaction() {
 		PublicKey key = UserCatalog.getInstance().getPublicKey(userId);
 		String f = String.format("%s%d%s", wineId, units, userId);
 		return Utils.verifySignature(key, f.getBytes(StandardCharsets.UTF_8), signature);
 	}
 
+	@Override
 	public String toString() {
 		String s = null;
 		if (type)
@@ -52,45 +82,4 @@ public class Transaction implements Serializable {
 				+ "\r\nUtilizador: " + userId + "\r\n";
 	}
 
-	// Get & Set Acho que nao vamos usar
-
-	public String getVinhoId() {
-		return wineId;
-	}
-
-	public void setVinhoId(String vinhoId) {
-		this.wineId = vinhoId;
-	}
-
-	public int getUnidades() {
-		return units;
-	}
-
-	public void setUnidades(int unidades) {
-		this.units = unidades;
-	}
-
-	public double getValorUnidade() {
-		return unitValue;
-	}
-
-	public void setValorUnidade(double valorUnidade) {
-		this.unitValue = valorUnidade;
-	}
-
-	public String getUserId() {
-		return userId;
-	}
-
-	public void setUserId(String userId) {
-		this.userId = userId;
-	}
-
-	public byte[] getAssinatura() {
-		return signature;
-	}
-
-	public void setAssinatura(byte[] assinatura) {
-		this.signature = assinatura;
-	}
 }

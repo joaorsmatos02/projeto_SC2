@@ -84,6 +84,14 @@ public class Utils {
 		return null;
 	}
 
+	/**
+	 * Verifica uma assinatura
+	 * 
+	 * @param publicKey      a chave publica a usar
+	 * @param nonce          o nonce original
+	 * @param encryptedNonce o nonce encriptado
+	 * @return true se a assinatura e valida, false caso contrario
+	 */
 	public static boolean verifySignature(PublicKey publicKey, byte[] nonce, byte[] encryptedNonce) {
 		try {
 			Signature signature = Signature.getInstance("SHA256withRSA");
@@ -96,6 +104,16 @@ public class Utils {
 		return false;
 	}
 
+	/**
+	 * Cifra ou decifra assimetricamente uma string
+	 * 
+	 * @param mode indica se sera feita uma cifra (Cipher.ENCRYPT_MODE) ou decifra
+	 *             (Cipher.DECRYPT_MODE)
+	 * @param key  a chave a usar
+	 * @param data os dados a cifrar
+	 * @return a string cifrada/decifrada
+	 * @throws Exception
+	 */
 	public static String cipherAssimetricString(int mode, Key key, String data) throws Exception {
 		if (mode == Cipher.DECRYPT_MODE) {
 			byte[] bytes = Base64.getDecoder().decode(data.getBytes(StandardCharsets.UTF_8));
@@ -107,6 +125,16 @@ public class Utils {
 		}
 	}
 
+	/**
+	 * Cifra ou decifra assimetricamente um array de bytes
+	 * 
+	 * @param mode indica se sera feita uma cifra (Cipher.ENCRYPT_MODE) ou decifra
+	 *             (Cipher.DECRYPT_MODE)
+	 * @param key  a chave a usar
+	 * @param data os dados a cifrar
+	 * @return os bytes cifrados/decifrados
+	 * @throws Exception
+	 */
 	public static byte[] cipherAsymmetric(int mode, Key key, byte[] data) throws Exception {
 		Cipher cipher = Cipher.getInstance("RSA");
 		if (mode == Cipher.DECRYPT_MODE)
@@ -116,6 +144,16 @@ public class Utils {
 		return cipher.doFinal(data);
 	}
 
+	/**
+	 * Cifra ou decifra simetricamente uma string
+	 * 
+	 * @param mode indica se sera feita uma cifra (Cipher.ENCRYPT_MODE) ou decifra
+	 *             (Cipher.DECRYPT_MODE)
+	 * @param key  a chave a usar
+	 * @param data os dados a cifrar
+	 * @return a string cifrada/decifrada
+	 * @throws Exception
+	 */
 	public static String cipherSymmetricString(int mode, SecretKey key, String data) throws Exception {
 		if (mode == Cipher.DECRYPT_MODE) {
 			byte[] bytes = Base64.getDecoder().decode(data.getBytes(StandardCharsets.UTF_8));
@@ -127,6 +165,16 @@ public class Utils {
 		}
 	}
 
+	/**
+	 * Cifra ou decifra simetricamente um array de bytes
+	 * 
+	 * @param mode indica se sera feita uma cifra (Cipher.ENCRYPT_MODE) ou decifra
+	 *             (Cipher.DECRYPT_MODE)
+	 * @param key  a chave a usar
+	 * @param data os dados a cifrar
+	 * @return os bytes cifrados/decifrados
+	 * @throws Exception
+	 */
 	public static byte[] cipherSymmetric(int mode, SecretKey key, byte[] data) throws Exception {
 		Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
 		cipher.init(mode, key);

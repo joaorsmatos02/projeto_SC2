@@ -10,6 +10,11 @@ import entities.Transaction;
 import exceptions.BlockChainException;
 import utils.Utils;
 
+/**
+ * 
+ * A classe BlockChain representa a blockchain usada na aplicacao
+ *
+ */
 public class BlockChain {
 
 	private static BlockChain instance;
@@ -17,21 +22,40 @@ public class BlockChain {
 	private PublicKey serverPublicKey;
 	private PrivateKey serverPrivateKey;
 
-	private BlockChain() throws BlockChainException {
+	/**
+	 * Construtor privado da classe
+	 */
+	private BlockChain() {
 		this.blocks = new ArrayList<>();
 	}
 
+	/**
+	 * Getter estatico da classe
+	 * 
+	 * @return o objeto singleton da classe
+	 */
 	public static BlockChain getInstance() throws BlockChainException {
 		if (instance == null)
 			instance = new BlockChain();
 		return instance;
 	}
 
+	/**
+	 * Prepara as keys a serem usadas nas assinaturas da blockchain
+	 * 
+	 * @param pbk chave publica
+	 * @param pvk chave privada
+	 */
 	public void setKey(PublicKey pbk, PrivateKey pvk) {
 		this.serverPublicKey = pbk;
 		this.serverPrivateKey = pvk;
 	}
 
+	/**
+	 * Verifica a integridade da blockchain
+	 * 
+	 * @throws BlockChainException se ocorrer um erro na verificacao da blockchain
+	 */
 	public void verifyIntegrity() throws BlockChainException {
 		try {
 			File folder = new File("blockChain");
@@ -67,6 +91,12 @@ public class BlockChain {
 		}
 	}
 
+	/**
+	 * Adiciona uma transacao a BlockChain
+	 * 
+	 * @param ts a transacao a adicionar
+	 * @throws Exception
+	 */
 	public void addTransaction(Transaction ts) throws Exception {
 		Block last = blocks.get(blocks.size() - 1);
 		last.add(ts);
@@ -77,12 +107,22 @@ public class BlockChain {
 		}
 	}
 
+	/**
+	 * Assina um bloco da blockchain
+	 * 
+	 * @param b o bloco a assinar
+	 */
 	private void signBlock(Block b) {
 		byte[] toSign = b.generate32ByteHash();
 		byte[] signed = Utils.signByteArray(serverPrivateKey, toSign);
 		b.setSignature(signed);
 	}
 
+	/**
+	 * Lista todas as transacoes presentes na blockchain
+	 * 
+	 * @return uma string com uma representacao textual das transacoes
+	 */
 	public String listAllTransactions() {
 		String result = "";
 		for (Block b : blocks)

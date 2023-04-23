@@ -69,6 +69,12 @@ public class User {
 		return this.balance;
 	}
 
+	/**
+	 * Obtem o certificado do utilizador guardado pelo server
+	 * 
+	 * @return o certificado do utilizador
+	 * @throws Exception
+	 */
 	public Certificate getCertificate() throws Exception {
 		CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
 		FileInputStream fis = new FileInputStream("stores//server//keyRSApub_" + name + ".cer");

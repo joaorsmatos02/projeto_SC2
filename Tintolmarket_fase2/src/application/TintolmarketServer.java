@@ -118,10 +118,20 @@ public class TintolmarketServer {
 		}
 	}
 
+	/**
+	 * Obtem a chave usada para cifrar os ficheiros txt
+	 * 
+	 * @return a chave usada para cifrar os ficheiros txt
+	 */
 	public static SecretKey getFileKey() {
 		return fileKey;
 	}
 
+	/**
+	 * Obtem a KeyStore do server
+	 * 
+	 * @return a KeyStore do server
+	 */
 	public static KeyStore getKeyStore() {
 		return keyStore;
 	}
@@ -247,6 +257,13 @@ class ServerThread extends Thread {
 		}
 	}
 
+	/**
+	 * Representa a funcao add
+	 * 
+	 * @param in  a stream de input
+	 * @param out a stream de output
+	 * @throws Exception
+	 */
 	private static void add(ObjectInputStream in, ObjectOutputStream out) throws Exception {
 		String arg1 = in.readUTF();
 		File imgFiles = new File("imgFiles");
@@ -261,6 +278,14 @@ class ServerThread extends Thread {
 		out.writeUTF(String.format("Vinho %s adicionado com sucesso!", arg1));
 	}
 
+	/**
+	 * Representa a funcao sell
+	 * 
+	 * @param in   a stream de input
+	 * @param out  a stream de output
+	 * @param user o utilizador em questao
+	 * @throws Exception
+	 */
 	private static void sell(ObjectInputStream in, ObjectOutputStream out, User user) throws Exception {
 		String wine = in.readUTF();
 		double price = in.readDouble();
@@ -272,6 +297,13 @@ class ServerThread extends Thread {
 				price));
 	}
 
+	/**
+	 * Representa a funcao view
+	 * 
+	 * @param in  a stream de input
+	 * @param out a stream de output
+	 * @throws Exception
+	 */
 	private static void view(ObjectInputStream in, ObjectOutputStream out) throws Exception {
 		String arg1 = in.readUTF();
 		String[] result = ShowInfoHandler.view(arg1);
@@ -283,6 +315,14 @@ class ServerThread extends Thread {
 		out.writeObject(buffer);
 	}
 
+	/**
+	 * Representa a funcao buy
+	 * 
+	 * @param in   a stream de input
+	 * @param out  a stream de output
+	 * @param user o utilizador em questao
+	 * @throws Exception
+	 */
 	private static void buy(ObjectInputStream in, ObjectOutputStream out, User user) throws Exception {
 		String wine = in.readUTF();
 		String seller = in.readUTF();
@@ -293,10 +333,25 @@ class ServerThread extends Thread {
 		out.writeUTF(String.format("O utilizador %s comprou %d unidades de vinho %s", seller, num, wine));
 	}
 
+	/**
+	 * Representa a funcao wallet
+	 * 
+	 * @param out  a stream de output
+	 * @param user o utilizador em questao
+	 * @throws Exception
+	 */
 	private static void wallet(ObjectOutputStream out, User user) throws Exception {
 		out.writeUTF(ShowInfoHandler.wallet(user));
 	}
 
+	/**
+	 * Representa a funcao classify
+	 * 
+	 * @param in   a stream de input
+	 * @param out  a stream de output
+	 * @param user o utilizador em questao
+	 * @throws Exception
+	 */
 	private static void classify(ObjectInputStream in, ObjectOutputStream out, User user) throws Exception {
 		String arg1 = in.readUTF();
 		int num = Integer.parseInt(in.readUTF());
@@ -304,6 +359,14 @@ class ServerThread extends Thread {
 		out.writeUTF(String.format("Atribuiu %d estrelas ao vinho %s", num, arg1));
 	}
 
+	/**
+	 * Representa a funcao talk
+	 * 
+	 * @param in   a stream de input
+	 * @param out  a stream de output
+	 * @param user o utilizador em questao
+	 * @throws Exception
+	 */
 	private static void talk(ObjectInputStream in, ObjectOutputStream out, User user) throws Exception {
 		String recipient = in.readUTF();
 		String message = in.readUTF();
@@ -311,10 +374,23 @@ class ServerThread extends Thread {
 		out.writeUTF(String.format("Enviou uma mensagem ao utilizador %s", recipient));
 	}
 
+	/**
+	 * Representa a funcao read
+	 * 
+	 * @param out  a stream de output
+	 * @param user o utilizador em questao
+	 * @throws Exception
+	 */
 	private static void read(ObjectOutputStream out, User user) throws Exception {
 		out.writeUTF(ShowInfoHandler.read(user));
 	}
 
+	/**
+	 * Representa a funcao list
+	 * 
+	 * @param out a stream de output
+	 * @throws Exception
+	 */
 	private void list(ObjectOutputStream out) throws Exception {
 		out.writeUTF(ShowInfoHandler.list(blockChain));
 	}
