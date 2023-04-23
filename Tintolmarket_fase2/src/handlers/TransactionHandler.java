@@ -10,6 +10,7 @@ import entities.Transaction;
 import entities.User;
 import entities.Wine;
 import entities.WineAd;
+import exceptions.InvalidTransactionException;
 import exceptions.NotEnoughBalanceException;
 import exceptions.NotEnoughStockException;
 import exceptions.UserNotFoundException;
@@ -38,7 +39,8 @@ public class TransactionHandler {
 			if (ts.validateSellTransaction()) {
 				user.createWineAd(w, price, quantity);
 				BlockChain.getInstance().addTransaction(ts);
-			}
+			} else
+				throw new InvalidTransactionException("Erro ao validar transacao");
 		} else
 			throw new WineNotFoundException("O vinho nao existe");
 	}
@@ -51,13 +53,15 @@ public class TransactionHandler {
 	 * @param seller    O nome do utilizador vendedor.
 	 * @param quantity  A quantidade desejada para compra.
 	 * @param signature A assinatura do cliente
-	 * @throws NotEnoughStockException   Se nao houver stock suficiente.
-	 * @throws UserNotFoundException     Se o utilizador nao for encontrado.
-	 * @throws WineNotFoundException     Se o vinho nao for encontrado.
-	 * @throws NotEnoughBalanceException Se nao tiver saldo suficiente.
+	 * @throws NotEnoughStockException     Se nao houver stock suficiente.
+	 * @throws UserNotFoundException       Se o utilizador nao for encontrado.
+	 * @throws WineNotFoundException       Se o vinho nao for encontrado.
+	 * @throws NotEnoughBalanceException   Se nao tiver saldo suficiente.
+	 * @throws InvalidTransactionException Se a transacao for invalida
 	 */
 	public static void buy(User buyer, String wineName, String seller, int quantity, byte[] signature)
-			throws NotEnoughStockException, UserNotFoundException, WineNotFoundException, NotEnoughBalanceException {
+			throws NotEnoughStockException, UserNotFoundException, WineNotFoundException, NotEnoughBalanceException,
+			InvalidTransactionException {
 		double balance = buyer.getBalance();
 
 		User sellerUser = UserCatalog.getInstance().getUserByName(seller);
@@ -99,7 +103,10 @@ public class TransactionHandler {
 					wineAdCatalog.remove(wad);
 				}
 				BlockChain.getInstance().addTransaction(ts);
-			}
+			} else
+				throw new InvalidTransactionException("Erro ao validar assinatura");
+		} catch (InvalidTransactionException e) {
+			throw e;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

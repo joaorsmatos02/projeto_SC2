@@ -301,7 +301,7 @@ public class Tintolmarket {
 			String wine = tokens[1];
 			int qty = Integer.parseInt(tokens[3]);
 			String seller = tokens[2];
-			String s = String.format("%s%d%s", wine, qty, seller);
+			String s = String.format("%s%d%s", wine, qty, name);
 			byte[] signed = Utils.signString(privateKey, s);
 
 			out.writeUTF("b");
