@@ -329,14 +329,17 @@ public class Tintolmarket {
 			out.writeUTF("r");
 			out.flush();
 			String recieved = in.readUTF();
-			String[] users = recieved.split("(?!\\[.*), (?![^\\[]*?\\])");
-			for (String s : users) {
-				s = s.substring(s.indexOf("[") + 1, s.length() - 3);
-				String[] msgs = s.split(", ");
-				for (String msg : msgs) {
-					byte[] decryptedData = Base64.getDecoder().decode(msg);
-					recieved = recieved.replace(msg, new String(
-							Utils.cipherAsymmetric(Cipher.DECRYPT_MODE, key, decryptedData), StandardCharsets.UTF_8));
+			if (!recieved.equals("Nao tem mensagens")) {
+				String[] users = recieved.split("(?!\\[.*), (?![^\\[]*?\\])");
+				for (String s : users) {
+					s = s.substring(s.indexOf("[") + 1, s.length() - 3);
+					String[] msgs = s.split(", ");
+					for (String msg : msgs) {
+						byte[] decryptedData = Base64.getDecoder().decode(msg);
+						recieved = recieved.replace(msg,
+								new String(Utils.cipherAsymmetric(Cipher.DECRYPT_MODE, key, decryptedData),
+										StandardCharsets.UTF_8));
+					}
 				}
 			}
 			System.out.println(recieved);
