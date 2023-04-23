@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
+import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 
 import entities.User;
@@ -97,7 +98,7 @@ public class UserCatalog {
 		String certName = "";
 		String line;
 		while (sc.hasNextLine()) {
-			line = sc.nextLine();
+			line = Utils.cipher(Cipher.DECRYPT_MODE, fileKey, sc.nextLine());
 			if (line.startsWith(user)) {
 				newUser = false;
 				certName = line.split(":")[1];
@@ -160,7 +161,7 @@ public class UserCatalog {
 
 			this.addUser(user);
 			fw = new FileWriter("txtFiles//userCreds.txt", true);
-			fw.write(user + ":" + certFile.getName() + "\n");
+			fw.write(Utils.cipher(Cipher.ENCRYPT_MODE, fileKey, user + ":" + certFile.getName() + "\n"));
 			fw.close();
 		}
 		return result;
