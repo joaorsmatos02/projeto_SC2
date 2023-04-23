@@ -391,8 +391,16 @@ class ServerThread extends Thread {
 	 * @param out a stream de output
 	 * @throws Exception
 	 */
-	private void list(ObjectOutputStream out) throws Exception {
-		out.writeUTF(ShowInfoHandler.list(blockChain));
+	private void list(ObjectOutputStream out) {
+		try {
+			out.writeUTF(ShowInfoHandler.list(blockChain));
+		} catch (Exception e) {
+			try {
+				out.writeUTF(e.getMessage());
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+		}
 	}
 
 }

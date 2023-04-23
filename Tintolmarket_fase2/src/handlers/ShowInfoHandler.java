@@ -4,6 +4,7 @@ import catalogs.BlockChain;
 import catalogs.WineCatalog;
 import entities.User;
 import entities.Wine;
+import exceptions.BlockChainException;
 import exceptions.WineNotFoundException;
 
 /**
@@ -56,8 +57,9 @@ public class ShowInfoHandler {
 	 * 
 	 * @param blockChain a blockchain mantida pelo server
 	 * @return uma representacao textual de todas as transacoes buy e sell
+	 * @throws BlockChainException 
 	 */
-	public static String list(BlockChain blockChain) {
+	public static String list(BlockChain blockChain) throws BlockChainException {
 		return blockChain.listAllTransactions();
 	}
 }

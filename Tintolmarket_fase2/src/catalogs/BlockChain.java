@@ -122,8 +122,10 @@ public class BlockChain {
 	 * Lista todas as transacoes presentes na blockchain
 	 * 
 	 * @return uma string com uma representacao textual das transacoes
+	 * @throws BlockChainException 
 	 */
-	public String listAllTransactions() {
+	public String listAllTransactions() throws BlockChainException {
+		verifyIntegrity();
 		String result = "";
 		for (Block b : blocks)
 			result += b.toString();
