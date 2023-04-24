@@ -37,9 +37,10 @@ public class WineAdCatalog {
 		try {
 			if (!txtFolder.exists())
 				txtFolder.mkdir();
-			if (!wineAdsInfo.exists())
+			if (!wineAdsInfo.exists()) {
 				wineAdsInfo.createNewFile();
-			else
+				Utils.updateHash(wineAdsInfo);
+			} else
 				getWineAdsByTextFile(wineAdsInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -125,6 +126,7 @@ public class WineAdCatalog {
 			fw.write(Utils.cipherSymmetricString(Cipher.ENCRYPT_MODE, fileKey, wineAd.toString()) + "\r\n");
 			this.wineAds.add(wineAd);
 			fw.close();
+			Utils.updateHash(wineAdInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -50,9 +50,10 @@ public class UserCatalog {
 		try {
 			if (!txtFolder.exists())
 				txtFolder.mkdir();
-			if (!userInfo.exists())
+			if (!userInfo.exists()) {
 				userInfo.createNewFile();
-			else
+				Utils.updateHash(userInfo);
+			} else
 				getUsersByTextFile();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -83,7 +84,10 @@ public class UserCatalog {
 	 */
 	public synchronized String login(ObjectInputStream in, ObjectOutputStream out) throws Exception {
 		File users = new File("txtFiles//userCreds.txt");
-		users.createNewFile();
+		if (!users.exists()) {
+			users.createNewFile();
+			Utils.updateHash(users);
+		}
 		Scanner sc = new Scanner(users);
 
 		// le user e verifica se ja existe
@@ -166,10 +170,12 @@ public class UserCatalog {
 			fw.close();
 
 			this.addUser(user);
-			fw = new FileWriter("txtFiles//userCreds.txt", true);
+			File creds = new File("txtFiles//userCreds.txt");
+			fw = new FileWriter(creds, true);
 			fw.write(Utils.cipherSymmetricString(Cipher.ENCRYPT_MODE, fileKey, user + ":" + certFile.getName())
 					+ "\r\n");
 			fw.close();
+			Utils.updateHash(creds);
 		}
 		return result;
 	}
@@ -219,6 +225,7 @@ public class UserCatalog {
 			FileWriter fw = new FileWriter(userInfo, true);
 			fw.write(Utils.cipherSymmetricString(Cipher.ENCRYPT_MODE, fileKey, u.toString()) + "\r\n");
 			fw.close();
+			Utils.updateHash(userInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

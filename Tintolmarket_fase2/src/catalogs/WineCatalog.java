@@ -36,9 +36,10 @@ public class WineCatalog {
 		try {
 			if (!txtFolder.exists())
 				txtFolder.mkdir();
-			if (!wineInfo.exists())
+			if (!wineInfo.exists()) {
 				wineInfo.createNewFile();
-			else
+				Utils.updateHash(wineInfo);
+			} else
 				getWinesByTextFile(wineInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -116,6 +117,7 @@ public class WineCatalog {
 			this.wines.add(newWine);
 			fw.write(Utils.cipherSymmetricString(Cipher.ENCRYPT_MODE, fileKey, newWine.toString()) + "\r\n");
 			fw.close();
+			Utils.updateHash(wineInfo);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

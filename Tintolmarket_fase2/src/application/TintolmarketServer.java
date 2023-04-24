@@ -24,11 +24,13 @@ import catalogs.WineAdCatalog;
 import catalogs.WineCatalog;
 import entities.User;
 import exceptions.BlockChainException;
+import exceptions.InvalidHashException;
 import exceptions.WineNotFoundException;
 import exceptions.WrongCredentialsException;
 import handlers.AddInfoHandler;
 import handlers.ShowInfoHandler;
 import handlers.TransactionHandler;
+import utils.Utils;
 
 /**
  * Classe principal do servidor Tintolmarket.
@@ -80,6 +82,20 @@ public class TintolmarketServer {
 			KeyStore keyStore = KeyStore.getInstance("JCEKS");
 			keyStore.load(is, passwordKeystore.toCharArray());
 
+			KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+			keyGenerator.init(256, new SecureRandom(filePassword.getBytes()));
+			fileKey = keyGenerator.generateKey();
+
+			try {
+				Utils.verifyIntegrity(new File("txtFiles//userCreds.txt"));
+				Utils.verifyIntegrity(new File("txtFiles//userCatalog.txt"));
+				Utils.verifyIntegrity(new File("txtFiles//wineCatalog.txt"));
+				Utils.verifyIntegrity(new File("txtFiles//wineAdsCatalog.txt"));
+			} catch (InvalidHashException e) {
+				System.out.println(e.getMessage());
+				System.exit(0);
+			}
+
 			BlockChain blockChain = null;
 			try {
 				blockChain = BlockChain.getInstance();
@@ -92,10 +108,6 @@ public class TintolmarketServer {
 				System.out.println(e.getMessage());
 				System.exit(0);
 			}
-
-			KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-			keyGenerator.init(256, new SecureRandom(filePassword.getBytes()));
-			fileKey = keyGenerator.generateKey();
 
 			UserCatalog.getInstance();
 			WineCatalog.getInstance();

@@ -3,6 +3,7 @@ package utils;
 import java.io.File;
 import java.io.FileWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.security.Key;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -11,9 +12,11 @@ import java.util.Base64;
 import java.util.Scanner;
 
 import javax.crypto.Cipher;
+import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 
 import application.TintolmarketServer;
+import exceptions.InvalidHashException;
 
 /**
  * Classe Utils que fornece metodos uteis para manipular arquivos e outros
@@ -49,6 +52,7 @@ public class Utils {
 			sc.close();
 			file.delete();
 			newFile.renameTo(file);
+			updateHash(new File(file.getAbsolutePath()));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -179,6 +183,101 @@ public class Utils {
 		Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
 		cipher.init(mode, key);
 		return cipher.doFinal(data);
+	}
+
+	public static void updateHash(File file) throws InvalidHashException {
+		try {
+			File macs = new File("txtFiles//HMAC.txt");
+			if (!macs.exists()) {
+				macs.createNewFile();
+				if (file.exists())
+					throw new InvalidHashException("Ficheiro HMACS nao encontrado");
+			} else {
+				SecretKey key = TintolmarketServer.getFileKey();
+				File newMacs = new File("txtFiles//temp.txt");
+				newMacs.createNewFile();
+				FileWriter fw = new FileWriter(newMacs, true);
+				Scanner sc = new Scanner(macs);
+				boolean found = false;
+				String newLine = Utils.cipherSymmetricString(Cipher.ENCRYPT_MODE, key,
+						file.getName() + ":" + calculateHmac(file)) + "\r\n";
+				while (sc.hasNextLine()) {
+					String encryptedLine = sc.nextLine();
+					String decryptedLine = Utils.cipherSymmetricString(Cipher.DECRYPT_MODE, key, encryptedLine);
+					if (decryptedLine.startsWith(file.getName())) {
+						fw.append(newLine);
+						found = true;
+					} else {
+						fw.append(encryptedLine + "\r\n");
+					}
+				}
+				if (!found)
+					fw.append(newLine);
+				fw.close();
+				sc.close();
+				macs.delete();
+				newMacs.renameTo(macs);
+			}
+		} catch (InvalidHashException e) {
+			throw e;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public static void verifyIntegrity(File file) throws InvalidHashException {
+		Scanner sc = null;
+		File txtFolder = new File("txtFiles");
+		File macs = new File("txtFiles//HMAC.txt");
+		try {
+			if (!txtFolder.exists())
+				txtFolder.mkdir();
+			if (!macs.exists()) {
+				macs.createNewFile();
+				if (file.exists())
+					throw new InvalidHashException("Ficheiro HMACS nao encontrado");
+			} else {
+				if (!file.exists())
+					return;
+				SecretKey key = TintolmarketServer.getFileKey();
+				sc = new Scanner(macs);
+				boolean found = false;
+				while (sc.hasNextLine()) {
+					String line = Utils.cipherSymmetricString(Cipher.DECRYPT_MODE, key, sc.nextLine());
+					if (line.startsWith(file.getName())) {
+						found = true;
+						String hmac = line.split(":")[1];
+						if (!hmac.equals(calculateHmac(file))) {
+							sc.close();
+							throw new InvalidHashException("HMAC invalido");
+						}
+					}
+					if (!sc.hasNextLine() && !found) {
+						sc.close();
+						throw new InvalidHashException("HMAC nao encontrado");
+					}
+				}
+				sc.close();
+			}
+		} catch (InvalidHashException e) {
+			throw e;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static String calculateHmac(File file) {
+		try {
+			Mac mac = Mac.getInstance("HmacSHA1");
+			mac.init(TintolmarketServer.getFileKey());
+			mac.update(Files.readAllBytes(file.toPath()));
+			byte[] hmac = mac.doFinal();
+			return Base64.getEncoder().encodeToString(hmac);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 }
