@@ -185,6 +185,12 @@ public class Utils {
 		return cipher.doFinal(data);
 	}
 
+	/**
+	 * Atualiza o hash do file fornecido
+	 * 
+	 * @param file o ficheiro a atualizar
+	 * @throws InvalidHashException
+	 */
 	public static void updateHash(File file) throws InvalidHashException {
 		try {
 			File macs = new File("txtFiles//HMAC.txt");
@@ -226,6 +232,12 @@ public class Utils {
 
 	}
 
+	/**
+	 * Verifica a integridade do ficheiro fornecido atraves do seu hash
+	 * 
+	 * @param file o ficheiro a verificar
+	 * @throws InvalidHashException
+	 */
 	public static void verifyIntegrity(File file) throws InvalidHashException {
 		Scanner sc = null;
 		File txtFolder = new File("txtFiles");
@@ -267,6 +279,12 @@ public class Utils {
 		}
 	}
 
+	/**
+	 * Calcula o hmac do ficheiro fornecido
+	 * 
+	 * @param file o ficheiro a usar
+	 * @return uma string com o hash de file
+	 */
 	private static String calculateHmac(File file) {
 		try {
 			Mac mac = Mac.getInstance("HmacSHA1");
