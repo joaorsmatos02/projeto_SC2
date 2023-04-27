@@ -238,7 +238,7 @@ public class Utils {
 	 * @param file o ficheiro a verificar
 	 * @throws InvalidHashException
 	 */
-	public static void verifyIntegrity(File file) throws InvalidHashException {
+	public static void verifyIntegrity(File file) throws Exception {
 		Scanner sc = null;
 		File txtFolder = new File("txtFiles");
 		File macs = new File("txtFiles//HMAC.txt");
@@ -272,10 +272,8 @@ public class Utils {
 				}
 				sc.close();
 			}
-		} catch (InvalidHashException e) {
-			throw e;
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw e;
 		}
 	}
 

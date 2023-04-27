@@ -91,8 +91,8 @@ public class TintolmarketServer {
 				Utils.verifyIntegrity(new File("txtFiles//userCatalog.txt"));
 				Utils.verifyIntegrity(new File("txtFiles//wineCatalog.txt"));
 				Utils.verifyIntegrity(new File("txtFiles//wineAdsCatalog.txt"));
-			} catch (InvalidHashException e) {
-				System.out.println(e.getMessage());
+			} catch (Exception e) {
+				System.out.println("Erro ao verificar a integridade da blockchain.");
 				System.exit(0);
 			}
 
