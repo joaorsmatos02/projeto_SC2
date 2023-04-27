@@ -9,11 +9,11 @@ import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.PrivateKey;
-import java.security.SecureRandom;
 import java.security.cert.Certificate;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
@@ -24,7 +24,6 @@ import catalogs.WineAdCatalog;
 import catalogs.WineCatalog;
 import entities.User;
 import exceptions.BlockChainException;
-import exceptions.InvalidHashException;
 import exceptions.WineNotFoundException;
 import exceptions.WrongCredentialsException;
 import handlers.AddInfoHandler;
@@ -82,9 +81,16 @@ public class TintolmarketServer {
 			KeyStore keyStore = KeyStore.getInstance("JCEKS");
 			keyStore.load(is, passwordKeystore.toCharArray());
 
-			KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-			keyGenerator.init(256, new SecureRandom(filePassword.getBytes()));
-			fileKey = keyGenerator.generateKey();
+//			KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+//			keyGenerator.init(256, new SecureRandom(filePassword.getBytes()));
+//			fileKey = keyGenerator.generateKey();
+
+			byte[] salt = { (byte) 0xc9, (byte) 0x36, (byte) 0x78, (byte) 0x99, (byte) 0x52, (byte) 0x3e, (byte) 0xea,
+					(byte) 0xf2 };
+
+			PBEKeySpec keySpec = new PBEKeySpec(filePassword.toCharArray(), salt, 20);
+			SecretKeyFactory kf = SecretKeyFactory.getInstance("PBEWithHmacSHA256AndAES_128");
+			fileKey = kf.generateSecret(keySpec);
 
 			try {
 				Utils.verifyIntegrity(new File("txtFiles//userCreds.txt"));
@@ -165,6 +171,7 @@ class ServerThread extends Thread {
 		this.blockChain = blockChain;
 	}
 
+	@Override
 	public void run() {
 
 		System.out.println("Cliente conectado");

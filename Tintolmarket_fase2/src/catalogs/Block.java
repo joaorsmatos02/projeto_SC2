@@ -68,7 +68,7 @@ public class Block implements Serializable {
 	}
 
 	/**
-	 * Verifica se o bloco atual e valido, verificando o hash e assinautura, se
+	 * Verifica se o bloco atual e valido, verificando o hash e assinatura, se
 	 * estiver completo
 	 * 
 	 * @param pk a chave publica usada na validacao da assinatura
