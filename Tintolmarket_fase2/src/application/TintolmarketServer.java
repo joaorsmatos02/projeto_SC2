@@ -81,13 +81,8 @@ public class TintolmarketServer {
 			KeyStore keyStore = KeyStore.getInstance("JCEKS");
 			keyStore.load(is, passwordKeystore.toCharArray());
 
-//			KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-//			keyGenerator.init(256, new SecureRandom(filePassword.getBytes()));
-//			fileKey = keyGenerator.generateKey();
-
 			byte[] salt = { (byte) 0xc9, (byte) 0x36, (byte) 0x78, (byte) 0x99, (byte) 0x52, (byte) 0x3e, (byte) 0xea,
 					(byte) 0xf2 };
-
 			PBEKeySpec keySpec = new PBEKeySpec(filePassword.toCharArray(), salt, 20);
 			SecretKeyFactory kf = SecretKeyFactory.getInstance("PBEWithHmacSHA256AndAES_128");
 			fileKey = kf.generateSecret(keySpec);
@@ -98,7 +93,7 @@ public class TintolmarketServer {
 				Utils.verifyIntegrity(new File("txtFiles//wineCatalog.txt"));
 				Utils.verifyIntegrity(new File("txtFiles//wineAdsCatalog.txt"));
 			} catch (Exception e) {
-				System.out.println("Erro ao verificar a integridade da blockchain.");
+				System.out.println("Erro ao verificar a integridade dos ficheiros.");
 				System.exit(0);
 			}
 
@@ -111,7 +106,7 @@ public class TintolmarketServer {
 				blockChain.setKey(serverCert.getPublicKey(), pvk);
 				blockChain.verifyIntegrity();
 			} catch (BlockChainException e) {
-				System.out.println(e.getMessage());
+				System.out.println("Erro ao verificar a integridade da blockchain.");
 				System.exit(0);
 			}
 

@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.security.Key;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.Signature;
 import java.util.Base64;
 import java.util.Scanner;
@@ -14,6 +15,8 @@ import java.util.Scanner;
 import javax.crypto.Cipher;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEParameterSpec;
 
 import application.TintolmarketServer;
 import exceptions.InvalidHashException;
@@ -180,9 +183,27 @@ public class Utils {
 	 * @throws Exception
 	 */
 	public static byte[] cipherSymmetric(int mode, SecretKey key, byte[] data) throws Exception {
-		Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-		cipher.init(mode, key);
-		return cipher.doFinal(data);
+		byte[] salt = { (byte) 0xc9, (byte) 0x36, (byte) 0x78, (byte) 0x99, (byte) 0x52, (byte) 0x3e, (byte) 0xea,
+				(byte) 0xf2 };
+		Cipher cipher = Cipher.getInstance("PBEWithHmacSHA256AndAES_128");
+		byte[] res = null;
+		if (mode == Cipher.ENCRYPT_MODE) {
+			SecureRandom random = new SecureRandom();
+			byte[] iv = new byte[16];
+			random.nextBytes(iv);
+			cipher.init(mode, key, new PBEParameterSpec(salt, 20, new IvParameterSpec(iv)));
+			byte[] ciphered = cipher.doFinal(data);
+			res = new byte[16 + ciphered.length];
+			System.arraycopy(iv, 0, res, 0, 16);
+			System.arraycopy(ciphered, 0, res, 16, ciphered.length); // dar append do iv ao cifrado
+
+		} else {
+			byte[] iv = new byte[16];
+			System.arraycopy(data, 0, iv, 0, iv.length); // extrair iv do cifrado
+			cipher.init(mode, key, new PBEParameterSpec(salt, 20, new IvParameterSpec(iv)));
+			res = cipher.doFinal(data, 16, data.length - 16);
+		}
+		return res;
 	}
 
 	/**
