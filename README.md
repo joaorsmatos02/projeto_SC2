@@ -57,6 +57,8 @@ Após compilar o projeto, siga os passos abaixo para executar os programas.
 java TintolmarketServer <port> <password-cifra> <keystore> <password-keystore>
 ````
 
+As passwords das stores default são 123456.
+
 ## Executar a aplicação Cliente TintoImarket  
 
 1. Abra um novo terminal e navegue até a pasta onde se encontram os arquivos Java compilados.  
