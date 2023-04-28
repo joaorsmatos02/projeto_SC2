@@ -68,10 +68,10 @@ public class TintolmarketServer {
 			} else {
 				System.out.println(
 						"Argumentos invalidos. O servidor e iniciado na forma TintolmarketServer <port> <password-cifra> <keystore> <password-keystore>.");
+				System.exit(0);
 			}
-		} catch (IOException e1) {
-			e1.printStackTrace();
-			System.out.println("Erro na conexao com cliente");
+		} catch (Exception e1) {
+			System.out.println("Erro ao inicializar server");
 		}
 
 		try {
