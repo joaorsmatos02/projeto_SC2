@@ -1,7 +1,20 @@
 # Tintolmarket Fase 2 - Compilar e Executar
 
-Este documento explica como compilar e executar o projeto Tintolmarket Fase 1. O projeto consiste em uma aplicação distribuída do tipo cliente-servidor para a compra e venda de vinhos, semelhante ao Vivino.  
-Nesta primeira fase do trabalho, as questões de segurança da informação não são consideradas.
+Este documento explica como compilar e executar o projeto Tintolmarket Fase 2. Na primeira fase, foram implementadas as funcionalidades básicas do serviço, como a interação entre a aplicação Cliente e Servidor, e a gestão das informações dos utilizadores e vinhos.
+
+Agora, na segunda fase do projeto, o foco será nos requisitos de segurança, garantindo que as interações e o sistema como um todo sejam seguros. As funcionalidades da primeira fase serão mantidas, mas em alguns casos, a implementação será adaptada para cumprir os requisitos de segurança.
+
+O foco será na segurança da arquitetura do sistema. As principais alterações incluem:
+
+1. Comunicações através de sockets seguros TLS com autenticação unilateral.
+2. Armazenamento das chaves privadas em keystores protegidas por senhas.
+3. Uso de certificados de chave pública auto-assinados em uma truststore compartilhada.
+4. Geração de pares de chaves RSA de 2048 bits.
+5. Cifragem do ficheiro de utilizadores no servidor usando PBE com AES de 128 bits.
+6. Verificação de integridade dos ficheiros mantidos pelo servidor.
+7. Criação de um log seguro em forma de blockchain para registrar transações.
+8. Confidencialidade end-to-end nas mensagens trocadas entre clientes.
+9. Essas medidas de segurança visam garantir a proteção das informações, a integridade dos dados e a privacidade das comunicações entre os utilizadores do sistema Tintolmarket.
 
 ***
 
@@ -30,19 +43,19 @@ Após compilar o projeto, siga os passos abaixo para executar os programas.
 ## Executar o Servidor TintoImarketServer  
 
 1. Abra um terminal e navegue até a pasta onde se encontram os arquivos Java compilados.  
-2. Execute o seguinte comando para iniciar o servidor, substituindo ````<port>```` pelo número da porta (p.e. , 12345):
+2. Execute o seguinte comando para iniciar o servidor, substituindo ````<port>````, ````<password-cifra>````, ````<keystore>```` e ````<password-keystore>```` pelos valores correspondentes (p.e., 12345 para a porta):
 
 ````
-java TintolmarketServer <port>
+java TintolmarketServer <port> <password-cifra> <keystore> <password-keystore>
 ````
 
 ## Executar a aplicação Cliente TintoImarket  
 
 1. Abra um novo terminal e navegue até a pasta onde se encontram os arquivos Java compilados.  
-2. Execute o seguinte comando para iniciar a aplicação cliente, substituindo ````<serverAddress>````, ````<userID>```` e ````[password]```` pelos valores correspondentes:  
+2. Execute o seguinte comando para iniciar a aplicação cliente, substituindo ````<serverAddress>````, ````<truststore>````, ````<keystore>````, ````<password-keystore>```` e ````<userID>```` pelos valores correspondentes: 
 
 ````
-java TintolmarketClient <serverAddress> <userID> [password]
+java TintolmarketClient <serverAddress> <truststore> <keystore> <password-keystore> <userID>
 ````  
 Agora pode começar a utilizar o sistema Tintolmarket para adicionar vinhos, indicar quantidades disponíveis, classificar vinhos e enviar mensagens privadas a outros utilizadores.
 
@@ -62,14 +75,18 @@ A aplicação cliente oferece várias operações que pode executar. Alguns exem
 + `read`: Ler as novas mensagens recebidas e apresentar a identificação do remetente e a respectiva mensagem.
 + `exit`: Terminar o programa cliente.
 
+
+Adicionada nova funcionalidade na segunda fase:
++ `list`: Obtém a lista de todas as transações que já foram efetuadas e que se encontram
+armazenadas na blockchain. 
+
 ***
 
 # Limitações
 
 + Assume que o Servidor tem permissão para escrever no diretório em que está a ser executado.  
   
-+ Não inclui qualquer mecanismo de autenticação ou criptografia na transferência de ficheiros.
-
++ Certificados auto-assinados: O uso de certificados auto-assinados pode tornar o sistema vulnerável a ataques *man-in-the-middle*, já que não há uma autoridade certificadora (CA) verificando a autenticidade do certificado.
 ***
 
 # Autores
