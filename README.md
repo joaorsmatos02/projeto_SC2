@@ -57,8 +57,6 @@ Após compilar o projeto, siga os passos abaixo para executar os programas.
 java TintolmarketServer <port> <password-cifra> <keystore> <password-keystore>
 ````
 
-As passwords das stores default são 123456.
-
 ## Executar a aplicação Cliente TintoImarket  
 
 1. Abra um novo terminal e navegue até a pasta onde se encontram os arquivos Java compilados.  
@@ -67,7 +65,7 @@ As passwords das stores default são 123456.
 ````
 java TintolmarketClient <serverAddress> <truststore> <keystore> <password-keystore> <userID>
 ````  
-Agora pode começar a utilizar o sistema Tintolmarket para adicionar vinhos, indicar quantidades disponíveis, classificar vinhos e enviar mensagens privadas a outros utilizadores.
+Agora pode começar a utilizar o sistema Tintolmarket para adicionar vinhos, indicar quantidades disponíveis, classificar vinhos e enviar mensagens privadas a outros utilizadores. As passwords das stores default são 123456.
 
 ***
 # Adicionar Segurança ao Sistema
