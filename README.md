@@ -104,7 +104,7 @@ armazenadas na blockchain.
 
 + Assume que o Servidor tem permissão para escrever no diretório em que está a ser executado.  
   
-+ Certificados auto-assinados: O uso de certificados auto-assinados pode tornar o sistema vulnerável a ataques *man-in-the-middle*, já que não há uma autoridade certificadora (CA) verificando a autenticidade do certificado.
++ Certificados auto-assinados: O uso de certificados auto-assinados pode tornar o sistema vulnerável a ataques *man-in-the-middle*, já que não há uma autoridade certificadora (CA) que verifica a autenticidade do certificado.
 ***
 
 # Autores
