@@ -7,13 +7,21 @@ Agora, na segunda fase do projeto, o foco será nos requisitos de segurança, ga
 O foco será na segurança da arquitetura do sistema. As principais alterações incluem:
 
 1. Comunicações através de sockets seguros TLS com autenticação unilateral.
+
 2. Armazenamento das chaves privadas em keystores protegidas por senhas.
+
 3. Uso de certificados de chave pública auto-assinados em uma truststore compartilhada.
+
 4. Geração de pares de chaves RSA de 2048 bits.
+
 5. Cifragem do ficheiro de utilizadores no servidor usando PBE com AES de 128 bits.
+
 6. Verificação de integridade dos ficheiros mantidos pelo servidor.
+
 7. Criação de um log seguro em forma de blockchain para registrar transações.
+
 8. Confidencialidade end-to-end nas mensagens trocadas entre clientes.
+
 9. Essas medidas de segurança visam garantir a proteção das informações, a integridade dos dados e a privacidade das comunicações entre os utilizadores do sistema Tintolmarket.
 
 ***
@@ -60,7 +68,18 @@ java TintolmarketClient <serverAddress> <truststore> <keystore> <password-keysto
 Agora pode começar a utilizar o sistema Tintolmarket para adicionar vinhos, indicar quantidades disponíveis, classificar vinhos e enviar mensagens privadas a outros utilizadores.
 
 ***
+# Adicionar Segurança ao Sistema
 
+1. Canais seguros **TLS** para comunicação segura e autenticação de
+servidores
+
+2. Autenticação de utilizadores
+
+3. Criação de um *log* seguro para transações
+
+4. Confidencialidade *fim-a-fim* para as mensagens
+
+***
 # Operações Disponíveis
 
 A aplicação cliente oferece várias operações que pode executar. Alguns exemplos incluem:  
@@ -81,7 +100,6 @@ Adicionada nova funcionalidade na segunda fase:
 armazenadas na blockchain. 
 
 ***
-
 # Limitações
 
 + Assume que o Servidor tem permissão para escrever no diretório em que está a ser executado.  
