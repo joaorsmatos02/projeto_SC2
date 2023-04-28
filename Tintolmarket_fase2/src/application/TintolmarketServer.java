@@ -307,8 +307,8 @@ class ServerThread extends Thread {
 		byte[] signature = (byte[]) in.readObject();
 
 		TransactionHandler.sell(user, wine, price, qty, signature);
-		out.writeUTF(String.format("%d quantidade(s) de vinho %s colocada(s) a venda por %.2f com sucesso!", qty, wine,
-				price));
+		out.writeUTF(
+				String.format("%d unidade(s) de vinho %s colocada(s) a venda por %.2f com sucesso!", qty, wine, price));
 	}
 
 	/**
@@ -344,7 +344,7 @@ class ServerThread extends Thread {
 		byte[] signature = (byte[]) in.readObject();
 
 		TransactionHandler.buy(user, wine, seller, num, signature);
-		out.writeUTF(String.format("O utilizador %s comprou %d unidades de vinho %s", seller, num, wine));
+		out.writeUTF(String.format("O utilizador comprou %d unidades de vinho %s", num, wine));
 	}
 
 	/**

@@ -125,7 +125,6 @@ public class BlockChain {
 	 * @throws BlockChainException
 	 */
 	public String listAllTransactions() throws BlockChainException {
-		verifyIntegrity();
 		String result = "";
 		for (Block b : blocks)
 			result += b.toString();
