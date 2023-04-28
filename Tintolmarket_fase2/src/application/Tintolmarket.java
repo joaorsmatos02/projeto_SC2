@@ -398,9 +398,9 @@ public class Tintolmarket {
 			out.flush();
 			String recieved = in.readUTF();
 			if (!recieved.equals("Nao tem mensagens")) {
-				String[] users = recieved.split("(?!\\[.*), (?![^\\[]*?\\])");
+				String[] users = recieved.split("\r\n");
 				for (String s : users) {
-					s = s.substring(s.indexOf("[") + 1, s.length() - 3);
+					s = s.substring(s.indexOf("[") + 1, s.length() - 1);
 					String[] msgs = s.split(", ");
 					for (String msg : msgs)
 						recieved = recieved.replace(msg, Utils.cipherAssimetricString(Cipher.DECRYPT_MODE, key, msg));
